@@ -2,9 +2,8 @@ import { UnitNotFoundError } from "./errors";
 import { Prefix } from "./prefix";
 import { Quantity } from "./quantity";
 import { Unit } from "./unit";
-import {
-    logger
-} from "@shared/firebot-modules";
+import { logger } from "@shared/firebot-modules";
+
 
 export class UnitParser {
     static registeredUnits: {[key: string]: Unit} = {};
@@ -23,7 +22,7 @@ export class UnitParser {
             try {
                 const parsedQuantity = UnitParser.parseUnit(symbol);
                 logger.warn(`UnitConverter: ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedQuantity.unit.name} and being parsed as ${parsedQuantity}. One of them isn't gonna work.`);
-            } catch (err) {
+            } catch {
                 // symbol isn't conflicting with any of the currently registered combinations
             }
             // Check that the unit works with each registered prefix
@@ -31,7 +30,7 @@ export class UnitParser {
                 try {
                     const parsedQuantity = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
                     logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedQuantity.unit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedQuantity}. One of them isn't gonna work.`);
-                } catch (err) {
+                } catch {
                     // `${prefixSymbol}${symbol}` isn't conflicting with any of the currently registered combinations
                 }
             }
@@ -50,7 +49,7 @@ export class UnitParser {
             try {
                 const parsedQuantity = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
                 logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedQuantity.unit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedQuantity}. One of them isn't gonna work.`);
-            } catch (err) {
+            } catch {
                 // `${prefix.symbol}${unitSymbol}` isn't conflicting with any of the currently registered combinations
             }
         }

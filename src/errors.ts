@@ -44,3 +44,52 @@ export class ValueError extends UnitConverterError {
     }
 
 }
+
+export class DelimiterError extends UnitConverterError {
+    constructor(message: string) {
+        super(`Delimiter Error. ${message}`);
+
+        this.name = "DelimiterError";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, DelimiterError.prototype);
+    }
+
+}
+
+export class DepthLimitExceededError extends UnitConverterError {
+    constructor() {
+        super(`Depth limit exceeded while parsing`);
+
+        this.name = "DepthLimitExceededError";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, DepthLimitExceededError.prototype);
+    }
+
+}
+
+export class InvalidOperation extends UnitConverterError {
+    constructor(message: string) {
+        super(`Math operation invalid Error. ${message}`);
+
+        this.name = "InvalidOperation";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, InvalidOperation.prototype);
+    }
+
+}
+
+export class UnexpectedError extends UnitConverterError {
+    constructor(message: string) {
+        super(`Unexpected Error. ${message}`);
+
+        this.name = "UnexpectedError";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, UnexpectedError.prototype);
+    }
+
+}
+

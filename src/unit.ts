@@ -6,6 +6,7 @@ export type UnitDimensions = {
     THETA: number; // Thermodynamic temperature
     N: number; //     Amount of substance
     J: number; //     Light intensity
+    // TODO: unit of angle even though it's not a physical unit ?
 };
 
 export class Unit {
@@ -144,4 +145,7 @@ export class Unit {
     }
 
     // TODO: toString
+    // TODO: Keep a record of the UnitTree in a similar fashion to MathTree ?
+    // TODO: Keep a record of each symbol with its power as it's purely multiplicative ?
+    // TODO: Keep track of prefixes ? UnitWithPrefix class ?
 }

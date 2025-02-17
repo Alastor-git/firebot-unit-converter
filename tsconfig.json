@@ -3,6 +3,7 @@
         "outDir": "./dist/",
         "target": "ES2022",
         "module": "CommonJS",
+        "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
