@@ -88,7 +88,7 @@ export class ParseMath {
     }
 
     static atomize(toBeParsed: string): Array<string | number> {
-        return toBeParsed.split(/(\d*\.?\d+(?:[Ee][+-]?\d+)?)/)
+        return toBeParsed.split(/((?<=^|[*/+-\s.^])\d*\.?\d+(?:[Ee][+-]?\d+)?)/)
                          .flatMap<string | number>((value, index) => (Math.floor(index / 2) === index / 2
                                                                       ? value.split(/\s*([*/+-\s.^])\s*/)
                                                                       : Number(value)))
@@ -262,20 +262,17 @@ export class ParseMath {
                 if (nextAtom === '-') {
                     nextAtom = {type: 'oppose', element: atoms.shift() as MathTree};
                 }
-                const lastAtom: MathTree = processedAtoms.at(-1) as MathTree;
+                const lastAtom: MathTree = processedAtoms.pop() as MathTree;
                 if (
                     typeof lastAtom === 'object' && lastAtom.type === 'mult' &&
                     typeof nextAtom === 'object' && nextAtom.type === 'mult'
                 ) {
-                    lastAtom.factors.push(...nextAtom.factors);
+                    processedAtoms.push({type: 'mult', factors: [...lastAtom.factors, ...nextAtom.factors]});
                 } else if (typeof lastAtom === 'object' && lastAtom.type === 'mult') {
-                    lastAtom.factors.push(nextAtom);
+                    processedAtoms.push({type: 'mult', factors: [...lastAtom.factors, nextAtom]});
                 } else if (typeof nextAtom === 'object' && nextAtom.type === 'mult') {
-                    processedAtoms.pop();
-                    nextAtom.factors.unshift(lastAtom);
-                    processedAtoms.push(nextAtom);
+                    processedAtoms.push({type: 'mult', factors: [lastAtom, ...nextAtom.factors]});
                 } else {
-                    processedAtoms.pop();
                     processedAtoms.push({type: 'mult', factors: [lastAtom, nextAtom]});
                 }
             } else {
@@ -307,20 +304,17 @@ export class ParseMath {
             if (atom === '+') {
                 // atoms = [ +, ...] already dealt with [..., + ] should haved thrown an error already
                 const nextAtom: MathTree = atoms.shift() as MathTree;
-                const lastAtom: MathTree = processedAtoms.at(-1) as MathTree;
+                const lastAtom: MathTree = processedAtoms.pop() as MathTree;
                 if (
                     typeof lastAtom === 'object' && lastAtom.type === 'add' &&
                     typeof nextAtom === 'object' && nextAtom.type === 'add'
                 ) {
-                    lastAtom.terms.push(...nextAtom.terms);
+                    processedAtoms.push({type: 'add', terms: [...lastAtom.terms, ...nextAtom.terms]});
                 } else if (typeof lastAtom === 'object' && lastAtom.type === 'add') {
-                    lastAtom.terms.push(nextAtom);
+                    processedAtoms.push({type: 'add', terms: [...lastAtom.terms, nextAtom]});
                 } else if (typeof nextAtom === 'object' && nextAtom.type === 'add') {
-                    processedAtoms.pop();
-                    nextAtom.terms.unshift(lastAtom);
-                    processedAtoms.push(nextAtom);
+                    processedAtoms.push({type: 'add', terms: [lastAtom, ...nextAtom.terms]});
                 } else {
-                    processedAtoms.pop();
                     processedAtoms.push({type: 'add', terms: [lastAtom, nextAtom]});
                 }
             } else {

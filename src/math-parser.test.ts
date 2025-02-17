@@ -80,6 +80,8 @@ test('makeTree add', () => {
         terms: ['a', 'b', 'c']
     };
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
     input = [
         'a',
         '+',
@@ -92,6 +94,8 @@ test('makeTree add', () => {
         type: 'add',
         terms: ['a', 'b', 'c']
     };
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     input = [
         {
@@ -108,6 +112,8 @@ test('makeTree add', () => {
         type: 'add',
         terms: ['a', 'b', 'c', 'd']
     };
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
@@ -131,6 +137,8 @@ test('makeTree multiply', () => {
         factors: ['a', 'b', 'c']
     };
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
     input = [
         'a',
         '*',
@@ -143,6 +151,8 @@ test('makeTree multiply', () => {
         type: 'mult',
         factors: ['a', 'b', 'c']
     };
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     input = [
         {
@@ -159,6 +169,8 @@ test('makeTree multiply', () => {
         type: 'mult',
         factors: ['a', 'b', 'c', 'd']
     };
+    expect(ParseMath.makeTree(input)).toMatchObject(expected);
+    // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     input = ['a', 'b'];
     expected = {
@@ -722,14 +734,15 @@ test('makeTree order of operations', () => {
 
 test('atomize', () => {
     const atoms: string[] = [
-        '1', ' ', '1.225', '.', '.256', '+', '1e5', '*', '1.5E-06', '/', '.98e+3', '-', 'b', '^'
+        'a1', ' ', '1', ' ', '1.225', '.', '.256', '+', '1e5', '*', '1.5E-06', '/', '.98e+3', '-', 'b', '^'
     ];
     let totalAtoms = atoms.concat(
+        ['2', 'x', '.'],
         atoms.map((atom: string) => `  ${atom}`),
         atoms.map((atom: string) => `${atom}  `),
         atoms.map((atom: string) => `  ${atom}  `)
     );
-    let resultAtoms = atoms.concat(atoms, atoms, atoms).map(
+    let resultAtoms = atoms.concat(['2', 'x', '.'], atoms, atoms, atoms).map(
         (atom: string) => (atom === ' ' || Number.isNaN(Number(atom)) ? atom : Number(atom))
     );
     expect(ParseMath.atomize(totalAtoms.join(''))).toMatchObject(resultAtoms);
@@ -800,9 +813,9 @@ test('matchGroup - Non opened group', () => {
     expect(() => ParseMath.matchGroup('a]')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('{a')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('a}')).toThrow(DelimiterError);
-    //expect(() => ParseMath.matchGroup('(a))')).toThrow(DelimiterError);
-    //expect(() => ParseMath.matchGroup('(a])')).toThrow(DelimiterError);
-    //expect(() => ParseMath.matchGroup('(a})')).toThrow(DelimiterError);
+    expect(() => ParseMath.matchGroup('(a))')).toThrow(DelimiterError);
+    expect(() => ParseMath.matchGroup('(a])')).toThrow(DelimiterError);
+    expect(() => ParseMath.matchGroup('(a})')).toThrow(DelimiterError);
 });
 
 test('matchGroup - opened a group', () => {
@@ -832,7 +845,7 @@ test('matchGroup - opened a group', () => {
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
-    
+
     input = '[a]';
     expected = {
         groupMath: 'a',
@@ -857,7 +870,7 @@ test('matchGroup - opened a group', () => {
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
-    
+
     input = '{a}';
     expected = {
         groupMath: 'a',
