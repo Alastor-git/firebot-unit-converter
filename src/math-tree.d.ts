@@ -1,29 +1,28 @@
-type MathTree =
-    | string
+type MathTree<Symbol = string> =
+    | Symbol
     | number
     | {
         type: 'empty'
     }
     | {
         type: 'add';
-        terms: Array<MathTree>;
+        terms: Array<MathTree<Symbol>>;
     }
     | {
         type: 'oppose';
-        element: MathTree;
+        element: MathTree<Symbol>;
     }
     | {
         type: 'mult';
-        factors: Array<MathTree>;
+        factors: Array<MathTree<Symbol>>;
     }
     | {
         type: 'div';
-        numerator: MathTree;
-        denominator: MathTree;
+        numerator: MathTree<Symbol>;
+        denominator: MathTree<Symbol>;
     }
     | {
         type: 'pow';
-        base: MathTree;
-        exponent: MathTree;
+        base: MathTree<Symbol>;
+        exponent: MathTree<Symbol>;
     }
-    // TODO: Unit in the MathTree instead of string ? Parametrize ?

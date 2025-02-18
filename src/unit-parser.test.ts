@@ -45,26 +45,6 @@ test('registerPrefix - valid registration', () => {
     expect(logger.info).toHaveBeenLastCalledWith(expectedMessage);
 });
 
-test('parseUnit - valid parse', () => {
-    let expectedQuantity: Quantity;
-    // Simple unit
-    UnitParser.registerUnit(unit_g);
-    expectedQuantity = new Quantity(1, unit_g);
-    expect(UnitParser.parseUnit('g').isEqual(expectedQuantity)).toBe(true);
-    // Simple unit with prefix
-    UnitParser.registerPrefix(prefix_k);
-    expectedQuantity = new Quantity(1000, unit_g);
-    expect(UnitParser.parseUnit('kg').isEqual(expectedQuantity)).toBe(true);
-});
-
-test('parseUnit - invalid parse', () => {
-    // unit not found
-    expect(() => UnitParser.parseUnit('g')).toThrow(UnitNotFoundError);
-    // prefix not found
-    UnitParser.registerUnit(unit_g);
-    expect(() => UnitParser.parseUnit('kg')).toThrow(UnitNotFoundError);
-});
-
 test('registerUnit - unit in use', () => {
     let expectedMessage: string;
     expectedMessage = `UnitConverter: Unit symbol g already in use. Couldn't register unit gramme.`;
@@ -83,7 +63,7 @@ test('registerPrefix - prefix in use', () => {
 
 test('registerUnit - Already parses', () => {
     let expectedMessage: string;
-    expectedMessage = `UnitConverter: kilogramme's symbol kg is conflicting with unit gramme and being parsed as 1000 g. One of them isn't gonna work.`;
+    expectedMessage = `UnitConverter: kilogramme's symbol kg is conflicting with unit kilogramme and being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_kg);
@@ -92,7 +72,7 @@ test('registerUnit - Already parses', () => {
 
 test('registerPrefix - Already parses', () => {
     let expectedMessage: string;
-    expectedMessage = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as 1 kg. One of them isn't gonna work.`;
+    expectedMessage = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
@@ -101,9 +81,85 @@ test('registerPrefix - Already parses', () => {
 
 test('registerUnit - Creates unit/prefix conflict', () => {
     let expectedMessage: string;
-    expectedMessage = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as 1 kg. One of them isn't gonna work.`;
+    expectedMessage = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_g);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
+});
+
+test('parseUnit - valid parse', () => {
+    let expectedUnit: Unit;
+    // Simple unit
+    UnitParser.registerUnit(unit_g);
+    expectedUnit = unit_g;
+    expect(UnitParser.parseUnit('g').isEqual(expectedUnit)).toBe(true);
+    // Simple unit with prefix
+    UnitParser.registerPrefix(prefix_k);
+    expectedUnit = new Unit(
+        unit_g.symbols.map(symbol => `${prefix_k.symbol}${symbol}`),
+        `${prefix_k.name}${unit_g.name}`,
+        unit_g.dimensions,
+        unit_g.coeff * prefix_k.factor,
+        unit_g.offset
+    );
+    expect(UnitParser.parseUnit('kg').isEqual(expectedUnit)).toBe(true);
+});
+
+test('parseUnit - invalid parse', () => {
+    // unit not found
+    expect(() => UnitParser.parseUnit('g')).toThrow(UnitNotFoundError);
+    // prefix not found
+    UnitParser.registerUnit(unit_g);
+    expect(() => UnitParser.parseUnit('kg')).toThrow(UnitNotFoundError);
+});
+
+test('parseMathTreeUnits', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1});
+    const unitB: Unit = new Unit('B', 'unit B', {M: 1});
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3);
+    const prefix_m: Prefix = new Prefix('m', 'mili', 1e-3);
+    const untikA: Unit = new Unit(
+        `${prefix_k.symbol}${unitA.symbols[0]}`,
+        `${prefix_k.name}${unitA.name}`,
+        unitA.dimensions,
+        unitA.coeff * prefix_k.factor,
+        unitA.offset
+    );
+    UnitParser.registerUnit(unitA);
+    UnitParser.registerUnit(unitB);
+    UnitParser.registerPrefix(prefix_k);
+    UnitParser.registerPrefix(prefix_m);
+
+    let input: MathTree;
+    let expected: MathTree<Unit>;
+    input = 2;
+    expected = 2;
+    expect(UnitParser.parseMathTreeUnits(input)).toBe(expected);
+    input = 'A';
+    expected = unitA;
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = 'kA';
+    expected = untikA;
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'empty'};
+    expected = {type: 'empty'};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'add', terms: ['kA', 'B']};
+    expected = {type: 'add', terms: [untikA, unitB]};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'oppose', element: 'kA'};
+    expected = {type: 'oppose', element: untikA};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'div', numerator: 'kA', denominator: 'B'};
+    expected = {type: 'div', numerator: untikA, denominator: unitB};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'mult', factors: ['kA', 'B']};
+    expected = {type: 'mult', factors: [untikA, unitB]};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'pow', base: 'kA', exponent: 'B'};
+    expected = {type: 'pow', base: untikA, exponent: unitB};
+    expect(UnitParser.parseMathTreeUnits(input)).toMatchObject(expected);
+    input = {type: 'pow', base: 'kA', exponent: 'C'};
+    expect(() => UnitParser.parseMathTreeUnits(input)).toThrow(UnitNotFoundError);
 });
