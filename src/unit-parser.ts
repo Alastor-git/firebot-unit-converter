@@ -71,24 +71,17 @@ export class UnitParser {
         }
         if (unitSymbol) {
             const foundUnit: Unit = UnitParser.registeredUnits[unitSymbol];
-            const unit: Unit = new Unit(
+            if (prefixSymbol === '') {
+                return new Unit(
                 unitSymbol,
                 foundUnit.name,
                 foundUnit.dimensions,
                 foundUnit.coeff,
                 foundUnit.offset
             );
-            if (prefixSymbol === '') {
-                return unit;
             }
             const prefix: Prefix = UnitParser.registeredPrefixes[prefixSymbol];
-            return new Unit(
-                    `${prefix.symbol}${unit.symbols[0]}`,
-                    `${prefix.name}${unit.name}`,
-                    unit.dimensions,
-                    unit.coeff * prefix.factor,
-                    unit.offset
-                );
+            return foundUnit.applyPrefix(prefix, unitSymbol);
         }
         throw new UnitNotFoundError(candidate);
     }

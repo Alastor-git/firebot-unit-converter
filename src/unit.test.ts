@@ -1,3 +1,5 @@
+import { ValueError } from "./errors";
+import { Prefix } from "./prefix";
 import { Unit, UnitDimensions } from "./unit";
 
 const unitSymbol1: string = "uA";
@@ -213,4 +215,29 @@ test("power", () => {
     expect(unitA.power(power).power(1 / power).isDeltaEqual(unitA)).toBe(true);
     expect(unitA.power(0).isEqual(Unit.ONE)).toBe(true);
     expect(Unit.ONE.power(power).isEqual(Unit.ONE)).toBe(true);
+});
+
+test('applyPrefix', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1});
+    const unitB: Unit = new Unit(['A', 'B'], unitA.name, unitA.dimensions);
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3);
+    const untikA: Unit = new Unit(
+        `${prefix_k.symbol}${unitA.symbols[0]}`,
+        `${prefix_k.name}${unitA.name}`,
+        unitA.dimensions,
+        unitA.coeff * prefix_k.factor,
+        unitA.offset
+    );
+    const untikB: Unit = new Unit(
+        unitB.symbols.map(symbol => `${prefix_k.symbol}${symbol}`),
+        `${prefix_k.name}${unitB.name}`,
+        unitB.dimensions,
+        unitB.coeff * prefix_k.factor,
+        unitB.offset
+    );
+    expect(unitA.applyPrefix(prefix_k)).toMatchObject(untikA);
+    expect(unitA.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
+    expect(unitB.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
+    expect(unitB.applyPrefix(prefix_k)).toMatchObject(untikB);
+    expect(() => unitB.applyPrefix(prefix_k, 'C')).toThrow(ValueError);
 });

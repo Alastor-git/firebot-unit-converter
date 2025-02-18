@@ -1,3 +1,6 @@
+import { ValueError } from "./errors";
+import { Prefix } from "./prefix";
+
 export type UnitDimensions = {
     L: number; //     Length
     M: number; //     Mass
@@ -144,6 +147,19 @@ export class Unit {
             );
     }
 
+    applyPrefix(prefix: Prefix, unitSymbol?: string): Unit {
+        if (unitSymbol && !this.symbols.includes(unitSymbol)) {
+            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}`);
+        }
+        const symbols: string[] = unitSymbol ? [`${prefix.symbol}${unitSymbol}`] : this.symbols.map(unitSymbol => `${prefix.symbol}${unitSymbol}`);
+        return new Unit(
+            symbols,
+            `${prefix.name}${this.name}`,
+            this.dimensions,
+            this.coeff * prefix.factor,
+            this.offset
+        );
+    }
     // TODO: toString
     // TODO: Keep a record of the UnitTree in a similar fashion to MathTree ?
     // TODO: Keep a record of each symbol with its power as it's purely multiplicative ?

@@ -96,13 +96,7 @@ test('parseUnit - valid parse', () => {
     expect(UnitParser.parseUnit('g').isEqual(expectedUnit)).toBe(true);
     // Simple unit with prefix
     UnitParser.registerPrefix(prefix_k);
-    expectedUnit = new Unit(
-        unit_g.symbols.map(symbol => `${prefix_k.symbol}${symbol}`),
-        `${prefix_k.name}${unit_g.name}`,
-        unit_g.dimensions,
-        unit_g.coeff * prefix_k.factor,
-        unit_g.offset
-    );
+    expectedUnit = unit_g.applyPrefix(prefix_k, 'g');
     expect(UnitParser.parseUnit('kg').isEqual(expectedUnit)).toBe(true);
 });
 
@@ -119,13 +113,7 @@ test('parseMathTreeUnits', () => {
     const unitB: Unit = new Unit('B', 'unit B', {M: 1});
     const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3);
     const prefix_m: Prefix = new Prefix('m', 'mili', 1e-3);
-    const untikA: Unit = new Unit(
-        `${prefix_k.symbol}${unitA.symbols[0]}`,
-        `${prefix_k.name}${unitA.name}`,
-        unitA.dimensions,
-        unitA.coeff * prefix_k.factor,
-        unitA.offset
-    );
+    const untikA: Unit = unitA.applyPrefix(prefix_k, 'A');
     UnitParser.registerUnit(unitA);
     UnitParser.registerUnit(unitB);
     UnitParser.registerPrefix(prefix_k);
