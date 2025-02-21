@@ -1,5 +1,6 @@
 import { ValueError } from "./errors";
 import { Prefix } from "./prefix";
+import { Quantity } from "./quantity";
 
 export type UnitDimensions = {
     L: number; //     Length
@@ -93,7 +94,13 @@ export class Unit {
         return new Unit(this.symbols, this.name, this.dimensions, this.coeff);
     }
 
-    multiply(other: Unit): Unit {
+    multiply(other: Unit): Unit;
+    multiply(other: number): Quantity;
+    multiply(other: Unit | number): Unit | Quantity;
+    multiply(other: Unit | number): Unit | Quantity {
+        if (typeof other === 'number') {
+            return new Quantity(other, this);
+        }
         return new Unit(
             this.symbols.map(symA => other.symbols.map(symB => `${symA}*${symB}`)).flat(),
             `${this.name}*${other.name}`,
@@ -111,7 +118,13 @@ export class Unit {
             );
     }
 
-    divide(other: Unit): Unit {
+    divide(other: number): Quantity;
+    divide(other: Unit): Unit;
+    divide(other: Unit | number): Unit | Quantity;
+    divide(other: Unit | number): Unit | Quantity {
+        if (typeof other === 'number') {
+            return new Quantity(1 / other, this);
+        }
         return new Unit(
             this.symbols.map(symA => other.symbols.map(symB => `(${symA})/(${symB})`)).flat(),
             `(${this.name})/(${other.name})`,

@@ -1,9 +1,8 @@
-import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError } from "./errors";
+import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError, UnitMismatchError, ValueError } from "./errors";
 import { ParseMath } from "./math-parser";
+import { Quantity } from "./quantity";
+import { Unit } from "./unit";
 
-test('dummy', () => {
-    expect(true).toBe(true);
-});
 /* */
 test('makeTree empty', () => {
     expect(ParseMath.makeTree([])).toMatchObject({type: 'empty'});
@@ -935,4 +934,216 @@ test('matchGroup - Nesting', () => {
     expect(() => ParseMath.matchGroup(input)).not.toThrow(DepthLimitExceededError);
     input = 'a0(a1(a2(a3(a4(a5(a6(a7(a8(a9(a10(a11(a12(a13(a14(a15(a16(a17(a18(a19(a20(a21)))))))))))))))))))))';
     expect(() => ParseMath.matchGroup(input)).toThrow(DepthLimitExceededError);
+});
+
+test('collapseMult', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitB: Unit = unitA.multiply(unitA);
+    const quantityA: Quantity = new Quantity(5, unitA);
+    const quantityB: Quantity = new Quantity(-5, unitA);
+    const quantityC: Quantity = new Quantity(5, unitB);
+
+    expect(() => ParseMath.collapseMult(null, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseMult(unitA, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseMult(quantityA, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseMult(5, {type: 'empty'})).toThrow(ValueError);
+
+    expect(ParseMath.collapseMult(null, 5)).toBe(5);
+    expect(ParseMath.collapseMult(null, unitA)).toMatchObject(unitA);
+    expect(ParseMath.collapseMult(null, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
+
+    expect(ParseMath.collapseMult(5, 5)).toBe(25);
+    expect(ParseMath.collapseMult(5, unitA)).toMatchObject(quantityA);
+    expect(ParseMath.collapseMult(-1, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
+
+    expect(ParseMath.collapseMult(unitA, 5)).toMatchObject(quantityA);
+    expect(ParseMath.collapseMult(unitA, unitA)).toMatchObject(unitB);
+    expect(ParseMath.collapseMult(unitA, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityC);
+
+    expect(ParseMath.collapseMult(quantityA, -1)).toMatchObject(quantityB);
+    expect(ParseMath.collapseMult(quantityA, unitA)).toMatchObject(quantityC);
+    expect(ParseMath.collapseMult(quantityB, {type: 'mult', factors: [-1, unitA]})).toMatchObject(quantityC);
+});
+
+test('collapseAdd', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const quantityA: Quantity = new Quantity(5, unitA);
+    const quantityB: Quantity = new Quantity(10, unitA);
+    const quantityC: Quantity = new Quantity(-5, unitA);
+    const quantityD: Quantity = new Quantity(5, Unit.ONE);
+    const quantityE: Quantity = new Quantity(10, Unit.ONE);
+
+    expect(() => ParseMath.collapseAdd(null, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseAdd(unitA, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseAdd(quantityA, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseAdd(5, {type: 'empty'})).toThrow(ValueError);
+
+    expect(() => ParseMath.collapseAdd(null, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapseAdd(unitA, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapseAdd(quantityA, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapseAdd(5, unitA)).toThrow(InvalidOperation);
+
+    expect(ParseMath.collapseAdd(null, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
+    expect(() => ParseMath.collapseAdd(unitA, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
+    expect(ParseMath.collapseAdd(quantityA, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
+    expect(ParseMath.collapseAdd(quantityC, {type: 'mult', factors: [5, unitA]})).toMatchObject(Quantity.zero(unitA));
+    expect(() => ParseMath.collapseAdd(5, {type: 'mult', factors: [5, unitA]})).toThrow(UnitMismatchError);
+
+    expect(ParseMath.collapseAdd(null, 5)).toBe(5);
+    expect(() => ParseMath.collapseAdd(unitA, 5)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapseAdd(quantityA, 5)).toThrow(UnitMismatchError);
+    expect(ParseMath.collapseAdd(quantityD, 5)).toMatchObject(quantityE);
+    expect(ParseMath.collapseAdd(5, 5)).toBe(10);
+});
+
+test('collapseOppose', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const quantityA: Quantity = new Quantity(5, unitA);
+    const quantityB: Quantity = new Quantity(-5, unitA);
+
+    expect(ParseMath.collapseOppose(5)).toBe(-5);
+    expect(ParseMath.collapseOppose({type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
+    expect(ParseMath.collapseOppose({type: 'mult', factors: [-5, unitA]})).toMatchObject(quantityA);
+
+    expect(() => ParseMath.collapseOppose({type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseOppose(unitA)).toThrow(InvalidOperation);
+});
+
+test('collapseDivide', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitB: Unit = new Unit('A', 'unit A', {M: 1}, 3);
+    const unitAB: Unit = unitA.divide(unitB);
+    const unitAinv: Unit = Unit.ONE.divide(unitA);
+
+    const quantity5AInv: Quantity = new Quantity(5, unitAinv);
+    const quantity1AInv: Quantity = new Quantity(1, unitAinv);
+    const quantity1A: Quantity = new Quantity(1, unitA);
+    const quantity02A: Quantity = new Quantity(1 / 5, unitA);
+
+    expect(() => ParseMath.collapseDivide({type: 'empty'}, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapseDivide({type: 'empty'}, 5)).toThrow(ValueError);
+    expect(() => ParseMath.collapseDivide({type: 'empty'}, unitA)).toThrow(ValueError);
+    expect(() => ParseMath.collapseDivide({type: 'empty'}, {type: 'mult', factors: [5, unitA]})).toThrow(ValueError);
+
+    expect(() => ParseMath.collapseDivide(5, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapseDivide(5, 5)).toBe(1);
+    expect(ParseMath.collapseDivide(5, unitA)).toMatchObject(quantity5AInv);
+    expect(ParseMath.collapseDivide(5, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantity1AInv);
+
+    expect(() => ParseMath.collapseDivide(unitA, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapseDivide(unitA, 5)).toMatchObject(quantity02A);
+    expect(ParseMath.collapseDivide(unitA, unitA)).toMatchObject(new Unit('(A)/(A)', '(unit A)/(unit A)'));
+    expect(ParseMath.collapseDivide(unitA, unitB)).toMatchObject(unitAB);
+    expect(ParseMath.collapseDivide(unitA, {type: 'mult', factors: [5, unitA]})).toMatchObject(new Quantity(1 / 5, new Unit('()/(A)*A', '()/(unit A)*unit A')));
+
+    expect(() => ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, 5)).toMatchObject(quantity1A);
+    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, unitA)).toMatchObject(new Quantity(5, new Unit('(A)/(A)', '(unit A)/(unit A)')));
+    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, {type: 'mult', factors: [5, unitA]})).toMatchObject(new Quantity(1, new Unit('(A)/(A)', '(unit A)/(unit A)')));
+});
+
+test('collapsePower', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitC: Unit = new Unit('C', 'unit C', {L: 1}, 1);
+
+    expect(() => ParseMath.collapsePower({type: 'empty'}, {type: 'empty'})).toThrow(ValueError);
+    expect(() => ParseMath.collapsePower({type: 'empty'}, 5)).toThrow(ValueError);
+    expect(() => ParseMath.collapsePower({type: 'empty'}, unitA)).toThrow(ValueError);
+    expect(() => ParseMath.collapsePower({type: 'empty'}, {type: 'mult', factors: [5, unitA]})).toThrow(ValueError);
+
+    expect(() => ParseMath.collapsePower(5, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapsePower(5, 5)).toBe(5 ** 5);
+    expect(() => ParseMath.collapsePower(5, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapsePower(5, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
+    expect(ParseMath.collapsePower(5, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toBe(5 ** 10);
+
+    expect(() => ParseMath.collapsePower(unitA, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapsePower(unitA, 5)).toMatchObject(unitA.power(5));
+    expect(() => ParseMath.collapsePower(unitA, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapsePower(unitA, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
+    expect(ParseMath.collapsePower(unitA, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toMatchObject(unitA.power(10));
+
+    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'empty'})).toThrow(ValueError);
+    expect(ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, 5)).toMatchObject(new Quantity(5, unitA).power(5));
+    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, unitA)).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
+    expect(ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toMatchObject(new Quantity(5, unitA).power(10));
+});
+
+test('collapseMathTree', () => {
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitB: Unit = unitA.multiply(unitA);
+    const unitC: Unit = new Unit('C', 'unit C', {M: 1}, 2, 1);
+    const unitAC: Unit = unitA.divide(unitC);
+
+    const quantityA: Quantity = new Quantity(5, unitA);
+    const quantityB: Quantity = new Quantity(-5, unitA);
+
+    // Base types
+    expect(ParseMath.collapseMathTree(5)).toBe(5);
+    expect(ParseMath.collapseMathTree(unitA)).toMatchObject(unitA);
+    expect(ParseMath.collapseMathTree({type: 'empty'})).toBe(null);
+
+    // Oppose
+    expect(() => ParseMath.collapseMathTree({type: 'oppose', element: {type: 'empty'}})).toThrow(ValueError);
+    expect(() => ParseMath.collapseMathTree({type: 'oppose', element: unitA})).toThrow(InvalidOperation);
+    expect(ParseMath.collapseMathTree({type: 'oppose', element: 5})).toBe(-5);
+    expect(ParseMath.collapseMathTree({type: 'oppose', element: {type: 'mult', factors: [-5, unitA]}})).toMatchObject(quantityA);
+    expect(ParseMath.collapseMathTree({type: 'oppose', element: {type: 'mult', factors: [5, unitA]}})).toMatchObject(quantityB);
+
+    // Multiply
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: []})).toBe(null);
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5]})).toBe(5);
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, 5, -1]})).toBe(-25);
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, -1, unitA]})).toMatchObject(quantityB);
+    expect(ParseMath.collapseMathTree({type: 'mult', factors: [unitA, unitA]})).toMatchObject(unitB);
+
+    // Add
+    expect(ParseMath.collapseMathTree({type: 'add', terms: []})).toBe(null);
+    expect(ParseMath.collapseMathTree({type: 'add', terms: [5]})).toBe(5);
+    expect(ParseMath.collapseMathTree({type: 'add', terms: [5, 5, -10]})).toBe(0);
+    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [5, 5, unitA]})).toThrow(InvalidOperation);
+    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [unitA, unitA]})).toThrow(InvalidOperation);
+    expect(ParseMath.collapseMathTree({type: 'add', terms: [5, 5, {type: 'mult', factors: [-10, Unit.ONE]}]})).toMatchObject(Quantity.zero());
+    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [5, 5, {type: 'mult', factors: [-10, unitA]}]})).toThrow(UnitMismatchError);
+    expect(ParseMath.collapseMathTree({type: 'add', terms: [
+        {type: 'mult', factors: [5, unitA]},
+        {type: 'mult', factors: [5, unitA]},
+        {type: 'mult', factors: [-10, unitA]}
+    ]})).toMatchObject(Quantity.zero(unitA));
+
+    // Divide
+    expect(() => ParseMath.collapseMathTree({
+        type: 'div',
+        numerator: {type: 'empty'},
+        denominator: {type: 'empty'}
+    })).toThrow(ValueError);
+    expect(ParseMath.collapseMathTree({
+        type: 'div',
+        numerator: 5,
+        denominator: {type: 'mult', factors: [5, 2]}
+    })).toBe(1 / 2);
+    expect(ParseMath.collapseMathTree({
+        type: 'div',
+        numerator: {type: 'mult', factors: [5, unitA]},
+        denominator: -1
+    })).toMatchObject(quantityB);
+    expect(ParseMath.collapseMathTree({
+        type: 'div',
+        numerator: {type: 'mult', factors: [5, unitA]},
+        denominator: {type: 'mult', factors: [1, unitC]}
+    })).toMatchObject(new Quantity(5, unitAC));
+    expect(ParseMath.collapseMathTree({
+        type: 'div',
+        numerator: unitA,
+        denominator: unitC
+    })).toMatchObject(unitAC);
+
+    // Power
+    expect(() => ParseMath.collapseMathTree({type: 'pow', base: {type: 'empty'}, exponent: {type: 'empty'}})).toThrow(ValueError);
+    expect(() => ParseMath.collapseMathTree({type: 'pow', base: unitA, exponent: unitA})).toThrow(InvalidOperation);
+    expect(ParseMath.collapseMathTree({type: 'pow', base: 5, exponent: 5})).toBe(5 ** 5);
+    expect(ParseMath.collapseMathTree({type: 'pow', base: unitA, exponent: 5})).toMatchObject(unitA.power(5));
+    expect(ParseMath.collapseMathTree({type: 'pow', base: {type: 'mult', factors: [5, unitA]}, exponent: 5})).toMatchObject(quantityA.power(5));
 });

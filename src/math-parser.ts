@@ -1,5 +1,7 @@
 import regexEscape from "regex-escape";
-import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError } from "./errors";
+import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError, ValueError } from "./errors";
+import { Unit } from "./unit";
+import { Quantity } from "./quantity";
 
 export class ParseMath {
     static groupDelimiters: Record<string, string> = {'(': ')', '[': ']', '{': '}'};
@@ -334,5 +336,112 @@ export class ParseMath {
             default:
                 throw new UnexpectedError(`Some unknown error happened while parsing operations. Final state : ${JSON.stringify(atoms)}`);
         }
+    }
+
+    static collapseMathTree(mathTree: MathTree<Unit>): Unit | Quantity | number | null {
+        if (typeof mathTree === 'number' || mathTree instanceof Unit) {
+            return mathTree;
+        } else if (mathTree.type === 'mult') {
+            return mathTree.factors.reduce((total, current) => ParseMath.collapseMult(total, current), null);
+        } else if (mathTree.type === 'add') {
+            return mathTree.terms.reduce((total, current) => ParseMath.collapseAdd(total, current), null);
+        } else if (mathTree.type === 'oppose') {
+            return ParseMath.collapseOppose(mathTree.element);
+        } else if (mathTree.type === 'div') {
+            return ParseMath.collapseDivide(mathTree.numerator, mathTree.denominator);
+        } else if (mathTree.type === 'pow') {
+            return ParseMath.collapsePower(mathTree.base, mathTree.exponent);
+        }
+        // mathTree.type === 'empty'
+        return null;
+    }
+
+    static collapseMult(totalValue: Unit | Quantity | number | null, newFactor: MathTree<Unit>): Unit | Quantity | number {
+        const newFactorValue = ParseMath.collapseMathTree(newFactor);
+        if (newFactorValue === null) {
+            throw new ValueError(`Cannot multiply an empty group.`);
+        } else if (totalValue === null) {
+            return newFactorValue;
+        } else if (totalValue instanceof Quantity) {
+            return totalValue.multiply(newFactorValue);
+        } else if (newFactorValue instanceof Quantity) {
+            return newFactorValue.multiply(totalValue);
+        } else if (totalValue instanceof Unit) {
+            return totalValue.multiply(newFactorValue);
+        } else if (newFactorValue instanceof Unit) {
+            return newFactorValue.multiply(totalValue);
+        } else { // typeof totalValue === 'number' && typeof newFactorValue === 'number'
+            return totalValue * newFactorValue;
+        }
+    }
+
+    static collapseAdd(totalValue: Unit | Quantity | number | null, newTerm: MathTree<Unit>): Quantity | number {
+        const newTermValue = ParseMath.collapseMathTree(newTerm);
+        if (newTermValue === null) {
+            throw new ValueError(`Cannot multiply an empty group.`);
+        } else if (totalValue instanceof Unit || newTermValue instanceof Unit) {
+            throw new InvalidOperation(`Addition cannot be performed on a pure unit.`);
+        } else if (totalValue === null) {
+            return newTermValue;
+        } else if (totalValue instanceof Quantity) {
+            return totalValue.add(newTermValue);
+        } else if (newTermValue instanceof Quantity) {
+            return newTermValue.add(totalValue);
+        } else { // typeof totalValue === 'number' && typeof newTermValue === 'number'
+            return totalValue + newTermValue;
+        }
+    }
+
+    static collapseOppose(element: MathTree<Unit>): Quantity | number {
+        const elementValue = ParseMath.collapseMathTree(element);
+        if (elementValue === null) {
+            throw new ValueError(`Cannot oppose an empty group.`);
+        } else if (elementValue instanceof Unit) {
+            throw new InvalidOperation(`Opposition cannot be performed on pure units.`);
+        } else if (typeof elementValue === 'number') {
+            return -elementValue;
+        } else { // elementValue instanceof Quantity
+            return elementValue.oppose();
+        }
+    }
+
+    static collapseDivide(numerator: MathTree<Unit>, denominator: MathTree<Unit>): Quantity | Unit | number {
+        const numeratorValue = ParseMath.collapseMathTree(numerator);
+        const denominatorValue = ParseMath.collapseMathTree(denominator);
+        if (numeratorValue === null || denominatorValue === null) {
+            throw new ValueError(`Cannot perform division on empty groups`);
+        } else if (typeof numeratorValue === 'number' && typeof denominatorValue === 'number') {
+            return numeratorValue / denominatorValue;
+        } else if (numeratorValue instanceof Quantity) {
+            return numeratorValue.divide(denominatorValue);
+        } else if (denominatorValue instanceof Quantity) {
+            return Quantity.ONE().divide(denominatorValue).multiply(numeratorValue);
+        } else if (numeratorValue instanceof Unit) {
+            return numeratorValue.divide(denominatorValue);
+        } else { // denominatorValue instanceof Unit
+            return Unit.ONE.divide(denominatorValue).multiply(numeratorValue);
+        }
+    }
+
+    static collapsePower(base: MathTree<Unit>, exponent: MathTree<Unit>): Quantity | Unit | number {
+        const baseValue = ParseMath.collapseMathTree(base);
+        let exponentValue = ParseMath.collapseMathTree(exponent);
+        if (baseValue === null || exponentValue === null) {
+            throw new ValueError(`Cannot elevate to a power with empty groups`);
+        } else if (exponentValue instanceof Unit) {
+            throw new InvalidOperation(`The exponent of a power must be dimensionless.`);
+        }
+        if (exponentValue instanceof Quantity) {
+            if (exponentValue.unit.isDimensionless()) {
+                exponentValue = exponentValue.convert(Unit.ONE).value;
+            } else {
+                throw new InvalidOperation(`The exponent of a power must be dimensionless.`);
+            }
+        }
+        if (typeof baseValue === 'number') {
+            return baseValue ** exponentValue;
+        }
+        // baseValue instanceof Unit || baseValue instanceof Quantity
+        return baseValue.power(exponentValue);
     }
 }

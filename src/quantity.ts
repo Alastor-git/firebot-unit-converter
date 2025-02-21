@@ -14,7 +14,12 @@ export class Quantity {
         return new Quantity(0, unit);
     }
 
-    static ONE = new Quantity(1, Unit.ONE);
+    // One must be dynamically initialized because Quantity and One refer to each other, so on load, one of them isn't declared yet
+    static _ONE: Quantity;
+    static ONE() {
+        Quantity._ONE ??= new Quantity(1, Unit.ONE);
+        return Quantity._ONE;
+    }
 
     static isNull(quantity: Quantity | number) {
         if (typeof quantity === "number") {
@@ -38,8 +43,14 @@ export class Quantity {
         return this.isEqual(quantity.convert(this.unit));
     }
 
-    add(quantity: Quantity): Quantity {
-        if (!this.unit.isSameDimension(quantity.unit)) {
+    add(quantity: Quantity | number): Quantity {
+        if (typeof quantity === 'number') {
+            if (!this.unit.isDimensionless()) {
+                throw new UnitMismatchError(`${this.unit} isn't dimensionless`);
+            } else {
+                return new Quantity(this.convert(Unit.ONE).value + quantity, Unit.ONE);
+            }
+        } else if (!this.unit.isSameDimension(quantity.unit)) {
             throw new UnitMismatchError(`${this.unit} doesn't match ${quantity.unit}`);
         }
         // If both units have the same dimensions but aren't equal, perform conversion into the current unit
@@ -50,6 +61,10 @@ export class Quantity {
         return new Quantity(this.value + quantity.value, this.unit);
     }
 
+    oppose(): Quantity {
+        return new Quantity(-this.value, this.unit);
+    }
+/*
     subtract(quantity: Quantity): Quantity {
         if (!this.unit.isSameDimension(quantity.unit)) {
             throw new UnitMismatchError(`${this.unit} doesn't match ${quantity.unit}`);
@@ -61,16 +76,21 @@ export class Quantity {
         }
         return new Quantity(this.value - quantity.value, this.unit);
     }
-
-    multiply(quantity: Quantity | number): Quantity {
+*/
+    multiply(quantity: Quantity | Unit | number): Quantity {
         if (quantity instanceof Quantity) {
             // Unit multiplication assumes that both units are deltas, so we don't need to do it here
             return new Quantity(this.value * quantity.value, this.unit.multiply(quantity.unit));
+        } else if (quantity instanceof Unit) {
+            return new Quantity(this.value, this.unit.multiply(quantity));
         }
         return new Quantity(this.value * quantity, this.unit);
     }
 
-    divide(quantity: Quantity | number): Quantity {
+    divide(quantity: Quantity | Unit | number): Quantity {
+        if (quantity instanceof Unit) {
+            return new Quantity(this.value, this.unit.divide(quantity));
+        }
         if (Quantity.isNull(quantity)) {
             throw new ValueError(`Division by 0`);
         }

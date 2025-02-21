@@ -1,5 +1,6 @@
 import { ValueError } from "./errors";
 import { Prefix } from "./prefix";
+import { Quantity } from "./quantity";
 import { Unit, UnitDimensions } from "./unit";
 
 const unitSymbol1: string = "uA";
@@ -157,6 +158,7 @@ test("deltaUnit", () => {
 test("multiply", () => {
     const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
     const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const quantityA: Quantity = new Quantity(5, unitA);
     const dimensionMult: UnitDimensions = {
         L: dimensions1.L + dimensions2.L,
         M: dimensions1.M + dimensions2.M,
@@ -172,11 +174,14 @@ test("multiply", () => {
     expect(unitB.multiply(unitA).isEqual(unitAB)).toBe(true);
     expect(Unit.ONE.multiply(unitA).isDeltaEqual(unitA)).toBe(true);
     expect(Unit.ONE.multiply(unitA).isEqual(unitA)).toBe(false);
+
+    expect(unitA.multiply(5).isEqual(quantityA)).toBe(true);
 });
 
 test("divide", () => {
     const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
     const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const quantityA: Quantity = new Quantity(1 / 5, unitA);
     const dimensionDiv: UnitDimensions = {
         L: dimensions1.L - dimensions2.L,
         M: dimensions1.M - dimensions2.M,
@@ -194,6 +199,8 @@ test("divide", () => {
     expect(unitA.divide(Unit.ONE).isDeltaEqual(unitA)).toBe(true);
     expect(unitA.divide(Unit.ONE).isEqual(unitA)).toBe(false);
     expect(unitA.divide(unitA).isEqual(Unit.ONE)).toBe(true);
+
+    expect(unitA.divide(5).isEqual(quantityA)).toBe(true);
 });
 
 test("power", () => {

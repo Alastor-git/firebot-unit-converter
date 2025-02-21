@@ -3,7 +3,6 @@ import { logger } from "./shared/firebot-modules";
 import { Unit } from "./unit";
 import { UnitParser } from "./unit-parser";
 import { Prefix } from "./prefix";
-import { Quantity } from "./quantity";
 import { UnitNotFoundError } from "./errors";
 
 const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 1, 0); // eslint-disable-line camelcase

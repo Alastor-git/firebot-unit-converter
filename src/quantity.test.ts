@@ -117,8 +117,32 @@ test("add", () => {
     expect(Quantity.zero(unitA).add(quantityD).isEquivalent(quantityD)).toBe(true);
 
     expect(() => quantityA.add(quantityE)).toThrow(UnitMismatchError);
+
+    // number parameter
+    const unit1A: Unit = Unit.ONE;
+    const unit1B: Unit = new Unit('B', 'shift scalar', {}, 1, 10);
+    const unit1C: Unit = new Unit('C', 'scaled scalar', {}, 2);
+
+    const quantity1A: Quantity = new Quantity(10, unit1A);
+    const quantity1B: Quantity = new Quantity(0, unit1B);
+    const quantity1C: Quantity = new Quantity(5, unit1C);
+
+    expect(quantity1A.add(-10).isEqual(Quantity.zero())).toBe(true);
+    expect(quantity1B.add(-10).isEqual(Quantity.zero())).toBe(true);
+    expect(quantity1C.add(-10).isEqual(Quantity.zero())).toBe(true);
+
+    expect(() => quantityA.add(2)).toThrow(UnitMismatchError);
 });
 
+test('oppose', () => {
+    const quantityA: Quantity = new Quantity(value1, unitA);
+    const quantityB: Quantity = new Quantity(-value1, unitA);
+
+    expect(quantityA.oppose().isEqual(quantityB)).toBe(true);
+    expect(Quantity.zero().oppose().isEqual(Quantity.zero())).toBe(true);
+    expect(Quantity.zero(unitA).oppose().isEqual(Quantity.zero(unitA))).toBe(true);
+});
+/*
 test("subtract", () => {
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitA);
@@ -147,25 +171,28 @@ test("subtract", () => {
 
     expect(() => quantityA.subtract(quantityE)).toThrow(UnitMismatchError);
 });
-
+*/
 test("multiply", () => {
     const unitC: Unit = unitA.multiply(unitB);
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitB);
     const quantityC: Quantity = new Quantity(value1 * value2, unitC);
+    const quantityD: Quantity = new Quantity(value1, unitC);
+
+    expect(quantityA.multiply(unitB).isEqual(quantityD)).toBe(true);
 
     expect(quantityA.multiply(quantityB).isEqual(quantityC)).toBe(true);
     expect(quantityB.multiply(quantityA).isEqual(quantityC)).toBe(true);
-    expect(quantityA.multiply(Quantity.ONE).isEqual(quantityA)).toBe(false);
-    expect(quantityA.multiply(Quantity.ONE).isDeltaEqual(quantityA)).toBe(true);
-    expect(Quantity.ONE.multiply(quantityA).isEqual(quantityA)).toBe(false);
-    expect(Quantity.ONE.multiply(quantityA).isDeltaEqual(quantityA)).toBe(true);
+    expect(quantityA.multiply(Quantity.ONE()).isEqual(quantityA)).toBe(false);
+    expect(quantityA.multiply(Quantity.ONE()).isDeltaEqual(quantityA)).toBe(true);
+    expect(Quantity.ONE().multiply(quantityA).isEqual(quantityA)).toBe(false);
+    expect(Quantity.ONE().multiply(quantityA).isDeltaEqual(quantityA)).toBe(true);
 
     const multiplier: number = 5.4;
-    const quantityD: Quantity = new Quantity(value1 * multiplier, unitA);
+    const quantityE: Quantity = new Quantity(value1 * multiplier, unitA);
 
     expect(quantityA.multiply(1).isEqual(quantityA)).toBe(true);
-    expect(quantityA.multiply(multiplier).isEqual(quantityD)).toBe(true);
+    expect(quantityA.multiply(multiplier).isEqual(quantityE)).toBe(true);
 });
 
 test("divide", () => {
@@ -173,22 +200,25 @@ test("divide", () => {
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitB);
     const quantityC: Quantity = new Quantity(value1 / value2, unitC);
+    const quantityD: Quantity = new Quantity(value1, unitC);
+
+    expect(quantityA.divide(unitB).isEqual(quantityD)).toBe(true);
 
     expect(quantityA.divide(quantityB).isEqual(quantityC)).toBe(true);
     expect(quantityB.divide(quantityA).isEqual(quantityC)).toBe(false);
     expect(quantityA.divide(quantityB).multiply(quantityB).isEqual(quantityA.deltaQuantity())).toBe(true);
 
-    expect(quantityA.divide(quantityA).isEqual(Quantity.ONE)).toBe(true);
+    expect(quantityA.divide(quantityA).isEqual(Quantity.ONE())).toBe(true);
 
-    expect(quantityA.divide(Quantity.ONE).isEqual(quantityA)).toBe(false);
-    expect(quantityA.divide(Quantity.ONE).isDeltaEqual(quantityA)).toBe(true);
+    expect(quantityA.divide(Quantity.ONE()).isEqual(quantityA)).toBe(false);
+    expect(quantityA.divide(Quantity.ONE()).isDeltaEqual(quantityA)).toBe(true);
 
     expect(() => quantityA.divide(Quantity.zero(unitB))).toThrow(ValueError);
 
     const divider: number = 3.5;
-    const quantityD: Quantity = new Quantity(value1 / divider, unitA);
+    const quantityE: Quantity = new Quantity(value1 / divider, unitA);
     expect(quantityA.divide(1).isEqual(quantityA)).toBe(true);
-    expect(quantityA.divide(divider).isEqual(quantityD)).toBe(true);
+    expect(quantityA.divide(divider).isEqual(quantityE)).toBe(true);
 
     expect(() => quantityA.divide(0)).toThrow(ValueError);
 });
@@ -214,7 +244,7 @@ test('power', () => {
     const quantityCC: Quantity = new Quantity((-value1) ** powerC, unitE);
     const quantityCD: Quantity = new Quantity((-value1) ** powerD, unitF);
 
-    expect(quantityA.power(0).isEqual(Quantity.ONE)).toBe(true);
+    expect(quantityA.power(0).isEqual(Quantity.ONE())).toBe(true);
     expect(quantityA.power(1).isDeltaEqual(quantityA)).toBe(true);
     expect(quantityA.power(powerA).isEqual(quantityAA)).toBe(true);
     expect(quantityA.power(powerB).isEqual(quantityAB)).toBe(true);
@@ -227,7 +257,7 @@ test('power', () => {
     expect(Quantity.isNull(quantityB.power(powerC))).toBe(true);
     expect(() => quantityB.power(powerD)).toThrow(ValueError);
 
-    expect(quantityC.power(0).isEqual(Quantity.ONE)).toBe(true);
+    expect(quantityC.power(0).isEqual(Quantity.ONE())).toBe(true);
     expect(quantityC.power(1).isDeltaEqual(quantityC)).toBe(true);
     expect(() => quantityC.power(powerA)).toThrow(ValueError);
     expect(() => quantityC.power(powerB)).toThrow(ValueError);
