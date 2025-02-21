@@ -415,7 +415,7 @@ export class ParseMath {
         } else if (numeratorValue instanceof Quantity) {
             return numeratorValue.divide(denominatorValue);
         } else if (denominatorValue instanceof Quantity) {
-            return Quantity.ONE().divide(denominatorValue).multiply(numeratorValue);
+            return Quantity.ONE.divide(denominatorValue).multiply(numeratorValue);
         } else if (numeratorValue instanceof Unit) {
             return numeratorValue.divide(denominatorValue);
         } else { // denominatorValue instanceof Unit

@@ -16,7 +16,7 @@ export class Quantity {
 
     // One must be dynamically initialized because Quantity and One refer to each other, so on load, one of them isn't declared yet
     static _ONE: Quantity;
-    static ONE() {
+    static get ONE() {
         Quantity._ONE ??= new Quantity(1, Unit.ONE);
         return Quantity._ONE;
     }

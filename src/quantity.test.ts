@@ -183,10 +183,10 @@ test("multiply", () => {
 
     expect(quantityA.multiply(quantityB).isEqual(quantityC)).toBe(true);
     expect(quantityB.multiply(quantityA).isEqual(quantityC)).toBe(true);
-    expect(quantityA.multiply(Quantity.ONE()).isEqual(quantityA)).toBe(false);
-    expect(quantityA.multiply(Quantity.ONE()).isDeltaEqual(quantityA)).toBe(true);
-    expect(Quantity.ONE().multiply(quantityA).isEqual(quantityA)).toBe(false);
-    expect(Quantity.ONE().multiply(quantityA).isDeltaEqual(quantityA)).toBe(true);
+    expect(quantityA.multiply(Quantity.ONE).isEqual(quantityA)).toBe(false);
+    expect(quantityA.multiply(Quantity.ONE).isDeltaEqual(quantityA)).toBe(true);
+    expect(Quantity.ONE.multiply(quantityA).isEqual(quantityA)).toBe(false);
+    expect(Quantity.ONE.multiply(quantityA).isDeltaEqual(quantityA)).toBe(true);
 
     const multiplier: number = 5.4;
     const quantityE: Quantity = new Quantity(value1 * multiplier, unitA);
@@ -208,10 +208,10 @@ test("divide", () => {
     expect(quantityB.divide(quantityA).isEqual(quantityC)).toBe(false);
     expect(quantityA.divide(quantityB).multiply(quantityB).isEqual(quantityA.deltaQuantity())).toBe(true);
 
-    expect(quantityA.divide(quantityA).isEqual(Quantity.ONE())).toBe(true);
+    expect(quantityA.divide(quantityA).isEqual(Quantity.ONE)).toBe(true);
 
-    expect(quantityA.divide(Quantity.ONE()).isEqual(quantityA)).toBe(false);
-    expect(quantityA.divide(Quantity.ONE()).isDeltaEqual(quantityA)).toBe(true);
+    expect(quantityA.divide(Quantity.ONE).isEqual(quantityA)).toBe(false);
+    expect(quantityA.divide(Quantity.ONE).isDeltaEqual(quantityA)).toBe(true);
 
     expect(() => quantityA.divide(Quantity.zero(unitB))).toThrow(ValueError);
 
@@ -244,7 +244,7 @@ test('power', () => {
     const quantityCC: Quantity = new Quantity((-value1) ** powerC, unitE);
     const quantityCD: Quantity = new Quantity((-value1) ** powerD, unitF);
 
-    expect(quantityA.power(0).isEqual(Quantity.ONE())).toBe(true);
+    expect(quantityA.power(0).isEqual(Quantity.ONE)).toBe(true);
     expect(quantityA.power(1).isDeltaEqual(quantityA)).toBe(true);
     expect(quantityA.power(powerA).isEqual(quantityAA)).toBe(true);
     expect(quantityA.power(powerB).isEqual(quantityAB)).toBe(true);
@@ -257,7 +257,7 @@ test('power', () => {
     expect(Quantity.isNull(quantityB.power(powerC))).toBe(true);
     expect(() => quantityB.power(powerD)).toThrow(ValueError);
 
-    expect(quantityC.power(0).isEqual(Quantity.ONE())).toBe(true);
+    expect(quantityC.power(0).isEqual(Quantity.ONE)).toBe(true);
     expect(quantityC.power(1).isDeltaEqual(quantityC)).toBe(true);
     expect(() => quantityC.power(powerA)).toThrow(ValueError);
     expect(() => quantityC.power(powerB)).toThrow(ValueError);
