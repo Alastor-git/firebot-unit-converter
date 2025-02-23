@@ -1,586 +1,364 @@
-import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError, UnitMismatchError, ValueError } from "./errors";
+import "@/mocks/firebot-modules";
+import { UnitParser } from "./unit-parser";
 import { ParseMath } from "./math-parser";
-import { Quantity } from "./quantity";
+import { DelimiterError, DepthLimitExceededError, InvalidOperation } from "./errors";
+import { MathTree, Empty, StringSymbol, Numeric, Add, Oppose, Multiply, Divide, Power } from './MathTree';
 import { Unit } from "./unit";
+import { Prefix } from "./prefix";
+import { Quantity } from "./quantity";
 
 /* */
 test('makeTree empty', () => {
-    expect(ParseMath.makeTree([])).toMatchObject({type: 'empty'});
+    expect(ParseMath.makeTree([])).toMatchObject(new Empty());
 });
 /* */
 test('makeTree single token', () => {
-    expect(ParseMath.makeTree(['a'])).toBe('a');
-    expect(ParseMath.makeTree([1])).toBe(1);
-    expect(ParseMath.makeTree([1.2])).toBe(1.2);
-    expect(ParseMath.makeTree([1.2e-5])).toBe(1.2e-5);
+    expect(ParseMath.makeTree([new StringSymbol('a')])).toMatchObject(new StringSymbol('a'));
+    expect(ParseMath.makeTree([new Numeric(1)])).toMatchObject(new Numeric(1));
+    expect(ParseMath.makeTree([new Numeric(1.2)])).toMatchObject(new Numeric(1.2));
+    expect(ParseMath.makeTree([new Numeric(1.2e-5)])).toMatchObject(new Numeric(1.2e-5));
 });
 /* */
 test('makeTree single group', () => {
     let subGroup: MathTree;
-    subGroup = {
-        type: 'empty'
-    };
+    subGroup = new Empty();
     expect(() => ParseMath.makeTree([subGroup])).toThrow(InvalidOperation);
-    subGroup = {
-        type: 'add',
-        terms: ['a', 'b']
-    };
+    subGroup = new Add(new StringSymbol('a'), new StringSymbol('b'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
-    subGroup = {
-        type: 'oppose',
-        element: 'a'
-    };
+    subGroup = new Oppose(new StringSymbol('a'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
-    subGroup = {
-        type: 'mult',
-        factors: ['a', 'b']
-    };
+    subGroup = new Multiply(new StringSymbol('a'), new StringSymbol('b'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
-    subGroup = {
-        type: 'div',
-        numerator: 'a',
-        denominator: 'b'
-    };
+    subGroup = new Divide(new StringSymbol('a'), new StringSymbol('b'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
-    subGroup = {
-        type: 'pow',
-        base: 'a',
-        exponent: 'b'
-    };
+    subGroup = new Power(new StringSymbol('a'), new StringSymbol('b'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
 });
 /* */
 test('makeTree spaces at start/end', () => {
-    expect(ParseMath.makeTree([' ', 'a'])).toBe('a');
-    expect(ParseMath.makeTree([' ', ' ', 'a'])).toBe('a');
-    expect(ParseMath.makeTree(['a', ' '])).toBe('a');
-    expect(ParseMath.makeTree(['a', ' ', ' '])).toBe('a');
-    expect(ParseMath.makeTree([' ', 'a', ' '])).toBe('a');
-    expect(ParseMath.makeTree([' ', ' ', 'a', ' ', ' '])).toBe('a');
+    const emptyString = new StringSymbol(' ');
+    const aString = new StringSymbol('a');
+    expect(ParseMath.makeTree([emptyString, aString])).toMatchObject(aString);
+    expect(ParseMath.makeTree([emptyString, emptyString, aString])).toMatchObject(aString);
+    expect(ParseMath.makeTree([aString, emptyString])).toMatchObject(aString);
+    expect(ParseMath.makeTree([aString, emptyString, emptyString])).toMatchObject(aString);
+    expect(ParseMath.makeTree([emptyString, aString, emptyString])).toMatchObject(aString);
+    expect(ParseMath.makeTree([emptyString, emptyString, aString, emptyString, emptyString])).toMatchObject(aString);
 });
 /* */
 test('makeTree add', () => {
-    let input: MathTree[] = ['a', '+', 'b'];
-    let expected: MathTree = {
-        type: 'add',
-        terms: ['a', 'b']
-    };
+    const plusString = new StringSymbol('+');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const cString = new StringSymbol('c');
+    const dString = new StringSymbol('d');
+    let input: MathTree[] = [aString, plusString, bString];
+    let expected: MathTree = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        {
-            type: 'add',
-            terms: ['a', 'b']
-        },
-        '+',
-        'c'
-    ];
-    expected = {
-        type: 'add',
-        terms: ['a', 'b', 'c']
-    };
+    input = [new Add(aString, bString), plusString, cString];
+    expected = new Add(aString, bString, cString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        'a',
-        '+',
-        {
-            type: 'add',
-            terms: ['b', 'c']
-        }
-    ];
-    expected = {
-        type: 'add',
-        terms: ['a', 'b', 'c']
-    };
+    input = [aString, plusString, new Add(bString, cString)];
+    expected = new Add(aString, bString, cString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        {
-            type: 'add',
-            terms: ['a', 'b']
-        },
-        '+',
-        {
-            type: 'add',
-            terms: ['c', 'd']
-        }
-    ];
-    expected = {
-        type: 'add',
-        terms: ['a', 'b', 'c', 'd']
-    };
+    input = [new Add(aString, bString), plusString, new Add(cString, dString)];
+    expected = new Add(aString, bString, cString, dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree multiply', () => {
-    let input: MathTree[] = ['a', '*', 'b'];
-    let expected: MathTree = {
-        type: 'mult',
-        factors: ['a', 'b']
-    };
+    const spaceString = new StringSymbol(' ');
+    const dotString = new StringSymbol('.');
+    const starString = new StringSymbol('*');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const cString = new StringSymbol('c');
+    const dString = new StringSymbol('d');
+    let input: MathTree[] = [aString, starString, bString];
+    let expected: MathTree = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        {
-            type: 'mult',
-            factors: ['a', 'b']
-        },
-        '*',
-        'c'
-    ];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b', 'c']
-    };
+    input = [new Multiply(aString, bString), starString, cString];
+    expected = new Multiply(aString, bString, cString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        'a',
-        '*',
-        {
-            type: 'mult',
-            factors: ['b', 'c']
-        }
-    ];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b', 'c']
-    };
+    input = [aString, starString, new Multiply(bString, cString)];
+    expected = new Multiply(aString, bString, cString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = [
-        {
-            type: 'mult',
-            factors: ['a', 'b']
-        },
-        '*',
-        {
-            type: 'mult',
-            factors: ['c', 'd']
-        }
-    ];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b', 'c', 'd']
-    };
+    input = [new Multiply(aString, bString), starString, new Multiply(cString, dString)];
+    expected = new Multiply(aString, bString, cString, dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // Do it twice to check we haven't mutated input objects
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', 'b'];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b']
-    };
+    input = [aString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', ' ', 'b'];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b']
-    };
+    input = [aString, spaceString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '.', 'b'];
-    expected = {
-        type: 'mult',
-        factors: ['a', 'b']
-    };
+    input = [aString, dotString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree divide', () => {
-    const input: MathTree[] = ['a', '/', 'b'];
-    const expected: MathTree = {
-        type: 'div',
-        numerator: 'a',
-        denominator: 'b'
-    };
+    const slashString = new StringSymbol('/');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const input: MathTree[] = [aString, slashString, bString];
+    const expected: MathTree = new Divide(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree power', () => {
-    const input: MathTree[] = ['a', '^', 'b'];
-    const expected: MathTree = {
-        type: 'pow',
-        base: 'a',
-        exponent: 'b'
-    };
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const input: MathTree[] = [aString, caretString, bString];
+    const expected: MathTree = new Power(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
+/* */
 test('makeTree oppose', () => {
-    const input: MathTree[] = ['-', 'a'];
-    const expected: MathTree = {
-        type: 'oppose',
-        element: 'a'
-    };
+    const minusString = new StringSymbol('-');
+    const aString = new StringSymbol('a');
+    const input: MathTree[] = [minusString, aString];
+    const expected: MathTree = new Oppose(aString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree sequences of operators', () => {
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const starString = new StringSymbol('*');
+    const slashString = new StringSymbol('/');
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
     let input: MathTree[];
     let expected: MathTree;
-    input = ['a', '+', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {
-                type: 'oppose',
-                element: 'b'
-            }
-        ]
-    };
+    input = [aString, plusString, minusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '*', '-', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            {
-                type: 'oppose',
-                element: 'b'
-            }
-        ]
-    };
+    input = [aString, starString, minusString, bString];
+    expected = new Multiply(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '/', '-', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: {
-            type: 'oppose',
-            element: 'b'
-        }
-    };
+    input = [aString, slashString, minusString, bString];
+    expected = new Divide(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '^', '-', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: {
-            type: 'oppose',
-            element: 'b'
-        }
-    };
+    input = [aString, caretString, minusString, bString];
+    expected = new Power(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '^', '*', 'b'];
+    input = [aString, caretString, starString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '^', '/', 'b'];
+    input = [aString, caretString, slashString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '^', '^', 'b'];
+    input = [aString, caretString, caretString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 
-    input = ['a', '^', '+', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: 'b'
-    };
+    input = [aString, caretString, plusString, bString];
+    expected = new Power(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '/', '*', 'b'];
+    input = [aString, slashString, starString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '/', '/', 'b'];
+    input = [aString, slashString, slashString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '/', '^', 'b'];
+    input = [aString, slashString, caretString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 
-    input = ['a', '/', '+', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: 'b'
-    };
+    input = [aString, slashString, plusString, bString];
+    expected = new Divide(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '*', '*', 'b'];
+    input = [aString, starString, starString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '*', '/', 'b'];
+    input = [aString, starString, slashString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '*', '^', 'b'];
+    input = [aString, starString, caretString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 
-    input = ['a', '*', '+', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, starString, plusString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '-', '*', 'b'];
+    input = [aString, minusString, starString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '-', '/', 'b'];
+    input = [aString, minusString, slashString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '-', '^', 'b'];
+    input = [aString, minusString, caretString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 
-    input = ['a', '-', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: ['a', 'b']
-    };
+    input = [aString, minusString, minusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '-', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {
-                type: 'oppose',
-                element: 'b'
-            }
-        ]
-    };
+    input = [aString, minusString, plusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
-    input = ['a', '+', '*', 'b'];
+    input = [aString, plusString, starString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '+', '/', 'b'];
+    input = [aString, plusString, slashString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '+', '^', 'b'];
+    input = [aString, plusString, caretString, bString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 
-    input = ['a', '+', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: ['a', 'b']
-    };
+    input = [aString, plusString, plusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree legal sequences of 3 operators', () => {
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const starString = new StringSymbol('*');
+    const slashString = new StringSymbol('/');
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
     let input: MathTree[];
     let expected: MathTree;
-    input = ['a', '+', '+', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, plusString, plusString, plusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '+', '+', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, plusString, plusString, minusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '+', '-', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, plusString, minusString, plusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '+', '-', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, plusString, minusString, minusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '-', '+', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, minusString, plusString, plusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '-', '+', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, minusString, plusString, minusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '-', '-', '+', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, minusString, minusString, plusString, bString];
+    expected = new Add(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '-', '-', '-', 'b'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, minusString, minusString, minusString, bString];
+    expected = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
 
-    input = ['a', '^', '+', '+', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: 'b'
-    };
+    input = [aString, caretString, plusString, plusString, bString];
+    expected = new Power(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '^', '+', '-', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: {type: 'oppose', element: 'b'}
-    };
+    input = [aString, caretString, plusString, minusString, bString];
+    expected = new Power(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '^', '-', '+', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: {type: 'oppose', element: 'b'}
-    };
+    input = [aString, caretString, minusString, plusString, bString];
+    expected = new Power(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '^', '-', '-', 'b'];
-    expected = {
-        type: 'pow',
-        base: 'a',
-        exponent: 'b'
-    };
+    input = [aString, caretString, minusString, minusString, bString];
+    expected = new Power(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
 
-    input = ['a', '/', '+', '+', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: 'b'
-    };
+    input = [aString, slashString, plusString, plusString, bString];
+    expected = new Divide(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '/', '+', '-', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: {type: 'oppose', element: 'b'}
-    };
+    input = [aString, slashString, plusString, minusString, bString];
+    expected = new Divide(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '/', '-', '+', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: {type: 'oppose', element: 'b'}
-    };
+    input = [aString, slashString, minusString, plusString, bString];
+    expected = new Divide(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '/', '-', '-', 'b'];
-    expected = {
-        type: 'div',
-        numerator: 'a',
-        denominator: 'b'
-    };
+    input = [aString, slashString, minusString, minusString, bString];
+    expected = new Divide(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
 
-    input = ['a', '*', '+', '+', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, starString, plusString, plusString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '*', '+', '-', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, starString, plusString, minusString, bString];
+    expected = new Multiply(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '*', '-', '+', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            {type: 'oppose', element: 'b'}
-        ]
-    };
+    input = [aString, starString, minusString, plusString, bString];
+    expected = new Multiply(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
-    input = ['a', '*', '-', '-', 'b'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            'b'
-        ]
-    };
+    input = [aString, starString, minusString, minusString, bString];
+    expected = new Multiply(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree some legal sequences of 4 operators', () => {
-    const input: MathTree[] = ['a', '-', '-', '+', '-', 'b'];
-    const expected: MathTree = {
-        type: 'add',
-        terms: [
-            'a',
-            {
-                type: 'oppose',
-                element: 'b'
-            }
-        ]
-    };
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const input: MathTree[] = [aString, minusString, minusString, plusString, minusString, bString];
+    const expected: MathTree = new Add(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree operation as first atom', () => {
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const starString = new StringSymbol('*');
+    const slashString = new StringSymbol('/');
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
     let input: MathTree[];
     let expected: MathTree;
-    input = ['*', 'a'];
+    input = [starString, aString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['/', 'a'];
+    input = [slashString, aString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['^', 'a'];
+    input = [caretString, aString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['+', 'a'];
-    expected = 'a';
+    input = [plusString, aString];
+    expected = aString;
     expect(ParseMath.makeTree(input)).toBe(expected);
-    input = ['-', 'a'];
-    expected = {
-        type: 'oppose',
-        element: 'a'
-    };
+    input = [minusString, aString];
+    expected = new Oppose(aString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
 /* */
 test('makeTree operation as last atom', () => {
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const starString = new StringSymbol('*');
+    const slashString = new StringSymbol('/');
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
     let input: MathTree[];
-    input = ['a', '+'];
+    input = [aString, plusString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '-'];
+    input = [aString, minusString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '*'];
+    input = [aString, starString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '/'];
+    input = [aString, slashString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
-    input = ['a', '^'];
+    input = [aString, caretString];
     expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
 });
 /* */
 test('makeTree order of operations', () => {
+    const plusString = new StringSymbol('+');
+    const minusString = new StringSymbol('-');
+    const starString = new StringSymbol('*');
+    const slashString = new StringSymbol('/');
+    const caretString = new StringSymbol('^');
+    const aString = new StringSymbol('a');
+    const bString = new StringSymbol('b');
+    const cString = new StringSymbol('c');
+    const dString = new StringSymbol('d');
     let input: MathTree[];
     let expected: MathTree;
     // ^ => Power
@@ -591,220 +369,153 @@ test('makeTree order of operations', () => {
 
     // - takes precedence over +
     // a + b - c + d = a + b + (-c) + d
-    input = ['a', '+', 'b', '-', 'c', '+', 'd'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            'b',
-            {type: 'oppose', element: 'c'},
-            'd'
-        ]
-    };
+    input = [aString, plusString, bString, minusString, cString, plusString, dString];
+    expected = new Add(aString, bString, new Oppose(cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // * takes precedence over +
     // a + b * c + d = a + (b * c) + d
-    input = ['a', '+', 'b', '*', 'c', '+', 'd'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'mult', factors: ['b', 'c']},
-            'd'
-        ]
-    };
+    input = [aString, plusString, bString, starString, cString, plusString, dString];
+    expected = new Add(aString, new Multiply(bString, cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // / takes precedence over +
     // a + b / c + d = a + (b / c) + d
-    input = ['a', '+', 'b', '/', 'c', '+', 'd'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'div', numerator: 'b', denominator: 'c'},
-            'd'
-        ]
-    };
+    input = [aString, plusString, bString, slashString, cString, plusString, dString];
+    expected = new Add(aString, new Divide(bString, cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // ^ takes precedence over +
     // a + b ^ c + d = a + (b ^ c) + d
-    input = ['a', '+', 'b', '^', 'c', '+', 'd'];
-    expected = {
-        type: 'add',
-        terms: [
-            'a',
-            {type: 'pow', base: 'b', exponent: 'c'},
-            'd'
-        ]
-    };
+    input = [aString, plusString, bString, caretString, cString, plusString, dString];
+    expected = new Add(aString, new Power(bString, cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     // * takes precedence over -
     // - a * b * - c = - (a * b * (-c))
-    input = ['-', 'a', '*', 'b', '*', '-', 'c'];
-    expected = {
-        type: 'oppose',
-        element: {
-            type: 'mult',
-            factors: [
-                'a',
-                'b',
-                {type: 'oppose', element: 'c'}
-            ]
-        }
-    };
+    input = [minusString, aString, starString, bString, starString, minusString, cString];
+    expected = new Oppose(new Multiply(aString, bString, new Oppose(cString)));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // / takes precedence over -
     // - a / b / - c = - ((a / b) / (-c))
-    input = ['-', 'a', '/', 'b', '/', '-', 'c'];
-    expected = {
-        type: 'oppose',
-        element: {
-            type: 'div',
-            numerator: {
-                type: 'div',
-                numerator: 'a',
-                denominator: 'b'
-            },
-            denominator: {type: 'oppose', element: 'c'}
-        }
-    };
+    input = [minusString, aString, slashString, bString, slashString, minusString, cString];
+    expected =
+    new Oppose(
+        new Divide(
+            new Divide(aString, bString),
+            new Oppose(cString)
+        )
+    );
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // ^ takes precedence over -
     // - a ^ b = - (a ^ b) ==> Ex -1^2 vs (-1)^2
-    input = ['-', 'a', '^', 'b'];
-    expected = {
-        type: 'oppose',
-        element: {
-            type: 'pow',
-            base: 'a',
-            exponent: 'b'
-        }
-    };
+    input = [minusString, aString, caretString, bString];
+    expected =
+    new Oppose(new Power(aString, bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // a ^ - b = (a ^ (-b))
-    input = ['a', '^', '-', 'b'];
-    expected = {
-            type: 'pow',
-            base: 'a',
-            exponent: {type: 'oppose', element: 'b'}
-    };
+    input = [aString, caretString, minusString, bString];
+    expected = new Power(aString, new Oppose(bString));
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     // / takes precedence over *
     // a * b / c * d = a * (b / c) * d
-    input = ['a', '*', 'b', '/', 'c', '*', 'd'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            {type: 'div', numerator: 'b', denominator: 'c'},
-            'd'
-        ]
-    };
+    input = [aString, starString, bString, slashString, cString, starString, dString];
+    expected = new Multiply(aString, new Divide(bString, cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
     // ^ takes precedence over *
     // a * b ^ c * d = a * (b ^ c) * d
-    input = ['a', '*', 'b', '^', 'c', '*', 'd'];
-    expected = {
-        type: 'mult',
-        factors: [
-            'a',
-            {type: 'pow', base: 'b', exponent: 'c'},
-            'd'
-        ]
-    };
+    input = [aString, starString, bString, caretString, cString, starString, dString];
+    expected = new Multiply(aString, new Power(bString, cString), dString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     // ^ takes precedence over /
     // a / b ^ c / d = (a / (b ^ c)) / d
-    input = ['a', '/', 'b', '^', 'c', '/', 'd'];
-    expected = {
-        type: 'div',
-        numerator: {
-            type: 'div',
-            numerator: 'a',
-            denominator: {type: 'pow', base: 'b', exponent: 'c'}
-        },
-        denominator: 'd'
-    };
+    input = [aString, slashString, bString, caretString, cString, slashString, dString];
+    expected =
+    new Divide(
+        new Divide(
+            aString,
+            new Power(bString, cString)
+        ),
+        dString
+    );
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 });
-
+/* */
 test('atomize', () => {
     const atoms: string[] = [
         'a1', ' ', '1', ' ', '1.225', '.', '.256', '+', '1e5', '*', '1.5E-06', '/', '.98e+3', '-', 'b', '^'
     ];
-    let totalAtoms = atoms.concat(
+    const totalAtoms = atoms.concat(
         ['2', 'x', '.'],
         atoms.map((atom: string) => `  ${atom}`),
         atoms.map((atom: string) => `${atom}  `),
         atoms.map((atom: string) => `  ${atom}  `)
     );
-    let resultAtoms = atoms.concat(['2', 'x', '.'], atoms, atoms, atoms).map(
-        (atom: string) => (atom === ' ' || Number.isNaN(Number(atom)) ? atom : Number(atom))
+    const resultAtoms = atoms.concat(['2', 'x', '.'], atoms, atoms, atoms).map(
+        (atom: string) => (atom === ' ' || Number.isNaN(Number(atom)) ? new StringSymbol(atom) : new Numeric(Number(atom)))
     );
     expect(ParseMath.atomize(totalAtoms.join(''))).toMatchObject(resultAtoms);
 });
-
+/* */
 test('matchGroup - Empty tree', () => {
     expect(() => ParseMath.matchGroup('')).toThrow(InvalidOperation);
     expect(() => ParseMath.matchGroup(' ')).toThrow(InvalidOperation);
 });
-
+/* */
 test('matchGroup - One level group', () => {
+    const aString: StringSymbol = new StringSymbol('a');
+    const bString: StringSymbol = new StringSymbol('b');
     let input: string;
     let expected: {groupMath: MathTree, remainder: string};
     input = 'a';
     expected = {
-        groupMath: 'a',
+        groupMath: aString,
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = '-a';
     expected = {
-        groupMath: {type: 'oppose', element: 'a'},
+        groupMath: new Oppose(aString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a + b';
     expected = {
-        groupMath: {type: 'add', terms: ['a', 'b']},
+        groupMath: new Add(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a - b';
     expected = {
-        groupMath: {type: 'add', terms: ['a', {type: 'oppose', element: 'b'}]},
+        groupMath: new Add(aString, new Oppose(bString)),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a * b';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b']},
+        groupMath: new Multiply(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a / b';
     expected = {
-        groupMath: {type: 'div', numerator: 'a', denominator: 'b'},
+        groupMath: new Divide(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a ^ b';
     expected = {
-        groupMath: {type: 'pow', base: 'a', exponent: 'b'},
+        groupMath: new Power(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
 });
-
+/* */
 test('matchGroup - Non closed group', () => {
     expect(() => ParseMath.matchGroup('a', 1, '(')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('a', 1, '[')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('a', 1, '{')).toThrow(DelimiterError);
 });
-
+/* */
 test('matchGroup - Non opened group', () => {
     expect(() => ParseMath.matchGroup('(a')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('a)')).toThrow(DelimiterError);
@@ -816,86 +527,90 @@ test('matchGroup - Non opened group', () => {
     expect(() => ParseMath.matchGroup('(a])')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('(a})')).toThrow(DelimiterError);
 });
-
+/* */
 test('matchGroup - opened a group', () => {
+    const aString: StringSymbol = new StringSymbol('a');
+    const bString: StringSymbol = new StringSymbol('b');
+    const cString: StringSymbol = new StringSymbol('c');
+    const dString: StringSymbol = new StringSymbol('d');
     let input: string;
     let expected: {groupMath: MathTree, remainder: string};
     input = '(a)';
     expected = {
-        groupMath: 'a',
+        groupMath: aString,
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = '(a)b';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b']},
+        groupMath: new Multiply(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a(b)c';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c']},
+        groupMath: new Multiply(aString, bString, cString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a(b)c(d)';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c', 'd']},
+        groupMath: new Multiply(aString, bString, cString, dString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
 
     input = '[a]';
     expected = {
-        groupMath: 'a',
+        groupMath: aString,
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = '[a]b';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b']},
+        groupMath: new Multiply(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a[b]c';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c']},
+        groupMath: new Multiply(aString, bString, cString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a[b]c[d]';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c', 'd']},
+        groupMath: new Multiply(aString, bString, cString, dString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
 
     input = '{a}';
     expected = {
-        groupMath: 'a',
+        groupMath: aString,
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = '{a}b';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b']},
+        groupMath: new Multiply(aString, bString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a{b}c';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c']},
+        groupMath: new Multiply(aString, bString, cString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
     input = 'a{b}c{d}';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c', 'd']},
+        groupMath: new Multiply(aString, bString, cString, dString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
 });
-
+/* */
 test('matchGroup - Mismatched delimiters', () => {
     expect(() => ParseMath.matchGroup('(a]')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('(a])')).toThrow(DelimiterError);
@@ -916,18 +631,23 @@ test('matchGroup - Mismatched delimiters', () => {
     expect(() => ParseMath.matchGroup('[a}]')).toThrow(DelimiterError);
     expect(() => ParseMath.matchGroup('a}b[c]')).toThrow(DelimiterError);
 });
-
+/* */
 test('matchGroup - Nesting', () => {
+    const aString: StringSymbol = new StringSymbol('a');
+    const bString: StringSymbol = new StringSymbol('b');
+    const cString: StringSymbol = new StringSymbol('c');
+    const dString: StringSymbol = new StringSymbol('d');
+    const eString: StringSymbol = new StringSymbol('e');
     let input: string;
     let expected: {groupMath: MathTree, remainder: string};
     input = 'a(b(c)d)e';
     expected = {
-        groupMath: {type: 'mult', factors: ['a', 'b', 'c', 'd', 'e']},
+        groupMath: new Multiply(aString, bString, cString, dString, eString),
         remainder: ''
     };
     expect(ParseMath.matchGroup(input)).toMatchObject(expected);
 });
-
+/* */
 test('matchGroup - Nesting', () => {
     let input: string;
     input = 'a0(a1(a2(a3(a4(a5(a6(a7(a8(a9(a10(a11(a12(a13(a14(a15(a16(a17(a18(a19(a20))))))))))))))))))))';
@@ -935,215 +655,29 @@ test('matchGroup - Nesting', () => {
     input = 'a0(a1(a2(a3(a4(a5(a6(a7(a8(a9(a10(a11(a12(a13(a14(a15(a16(a17(a18(a19(a20(a21)))))))))))))))))))))';
     expect(() => ParseMath.matchGroup(input)).toThrow(DepthLimitExceededError);
 });
+/* */
+test('match', () => {
+    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 1, 0); // eslint-disable-line camelcase
+    const unit_m: Unit = new Unit('m', 'meter', { L: 1 }); // eslint-disable-line camelcase
+    const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 2.54e-2); // eslint-disable-line camelcase
 
-test('collapseMult', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitB: Unit = unitA.multiply(unitA);
-    const quantityA: Quantity = new Quantity(5, unitA);
-    const quantityB: Quantity = new Quantity(-5, unitA);
-    const quantityC: Quantity = new Quantity(5, unitB);
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3); // eslint-disable-line camelcase
+    const prefix_c: Prefix = new Prefix('c', 'centi', 1e-2); // eslint-disable-line camelcase
+    const prefix_m: Prefix = new Prefix('m', 'mili', 1e-3); // eslint-disable-line camelcase
 
-    expect(() => ParseMath.collapseMult(null, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseMult(unitA, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseMult(quantityA, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseMult(5, {type: 'empty'})).toThrow(ValueError);
+    UnitParser.registerUnit(unit_g);
+    UnitParser.registerUnit(unit_m);
+    UnitParser.registerUnit(unit_in);
+    UnitParser.registerPrefix(prefix_m);
+    UnitParser.registerPrefix(prefix_c);
+    UnitParser.registerPrefix(prefix_k);
 
-    expect(ParseMath.collapseMult(null, 5)).toBe(5);
-    expect(ParseMath.collapseMult(null, unitA)).toMatchObject(unitA);
-    expect(ParseMath.collapseMult(null, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
-
-    expect(ParseMath.collapseMult(5, 5)).toBe(25);
-    expect(ParseMath.collapseMult(5, unitA)).toMatchObject(quantityA);
-    expect(ParseMath.collapseMult(-1, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
-
-    expect(ParseMath.collapseMult(unitA, 5)).toMatchObject(quantityA);
-    expect(ParseMath.collapseMult(unitA, unitA)).toMatchObject(unitB);
-    expect(ParseMath.collapseMult(unitA, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityC);
-
-    expect(ParseMath.collapseMult(quantityA, -1)).toMatchObject(quantityB);
-    expect(ParseMath.collapseMult(quantityA, unitA)).toMatchObject(quantityC);
-    expect(ParseMath.collapseMult(quantityB, {type: 'mult', factors: [-1, unitA]})).toMatchObject(quantityC);
+    expect(ParseMath.match('2 + 3 * 5e3 / (6 + 8)^(2+1) - 5').collapse()).toBe(2 + 3 * 5e3 / (6 + 8) ** (2 + 1) - 5);
+    // FIXME: 10m/(5e3mm) should be parsed the same as 10m/5e3mm
+    const expected = new Quantity(
+        (2e3 + 3 * 5 * 2.54e-2 - 5e-2) / (6 + 8e-3) ** (2 + 1) / 1e3,
+        unit_m.applyPrefix(prefix_k).divide(unit_g.power(3)) // eslint-disable-line camelcase
+    );
+    expect(ParseMath.match(`(2km + 3 * 5'' - 5cm) / (6g + 8mg)^(10m/(5e3mm)+1)`).parseUnits().collapse()).toMatchObject(expected);
 });
-
-test('collapseAdd', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const quantityA: Quantity = new Quantity(5, unitA);
-    const quantityB: Quantity = new Quantity(10, unitA);
-    const quantityC: Quantity = new Quantity(-5, unitA);
-    const quantityD: Quantity = new Quantity(5, Unit.ONE);
-    const quantityE: Quantity = new Quantity(10, Unit.ONE);
-
-    expect(() => ParseMath.collapseAdd(null, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseAdd(unitA, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseAdd(quantityA, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseAdd(5, {type: 'empty'})).toThrow(ValueError);
-
-    expect(() => ParseMath.collapseAdd(null, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapseAdd(unitA, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapseAdd(quantityA, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapseAdd(5, unitA)).toThrow(InvalidOperation);
-
-    expect(ParseMath.collapseAdd(null, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
-    expect(() => ParseMath.collapseAdd(unitA, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
-    expect(ParseMath.collapseAdd(quantityA, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
-    expect(ParseMath.collapseAdd(quantityC, {type: 'mult', factors: [5, unitA]})).toMatchObject(Quantity.zero(unitA));
-    expect(() => ParseMath.collapseAdd(5, {type: 'mult', factors: [5, unitA]})).toThrow(UnitMismatchError);
-
-    expect(ParseMath.collapseAdd(null, 5)).toBe(5);
-    expect(() => ParseMath.collapseAdd(unitA, 5)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapseAdd(quantityA, 5)).toThrow(UnitMismatchError);
-    expect(ParseMath.collapseAdd(quantityD, 5)).toMatchObject(quantityE);
-    expect(ParseMath.collapseAdd(5, 5)).toBe(10);
-});
-
-test('collapseOppose', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const quantityA: Quantity = new Quantity(5, unitA);
-    const quantityB: Quantity = new Quantity(-5, unitA);
-
-    expect(ParseMath.collapseOppose(5)).toBe(-5);
-    expect(ParseMath.collapseOppose({type: 'mult', factors: [5, unitA]})).toMatchObject(quantityB);
-    expect(ParseMath.collapseOppose({type: 'mult', factors: [-5, unitA]})).toMatchObject(quantityA);
-
-    expect(() => ParseMath.collapseOppose({type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseOppose(unitA)).toThrow(InvalidOperation);
-});
-
-test('collapseDivide', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitB: Unit = new Unit('A', 'unit A', {M: 1}, 3);
-    const unitAB: Unit = unitA.divide(unitB);
-    const unitAinv: Unit = Unit.ONE.divide(unitA);
-
-    const quantity5AInv: Quantity = new Quantity(5, unitAinv);
-    const quantity1AInv: Quantity = new Quantity(1, unitAinv);
-    const quantity1A: Quantity = new Quantity(1, unitA);
-    const quantity02A: Quantity = new Quantity(1 / 5, unitA);
-
-    expect(() => ParseMath.collapseDivide({type: 'empty'}, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapseDivide({type: 'empty'}, 5)).toThrow(ValueError);
-    expect(() => ParseMath.collapseDivide({type: 'empty'}, unitA)).toThrow(ValueError);
-    expect(() => ParseMath.collapseDivide({type: 'empty'}, {type: 'mult', factors: [5, unitA]})).toThrow(ValueError);
-
-    expect(() => ParseMath.collapseDivide(5, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapseDivide(5, 5)).toBe(1);
-    expect(ParseMath.collapseDivide(5, unitA)).toMatchObject(quantity5AInv);
-    expect(ParseMath.collapseDivide(5, {type: 'mult', factors: [5, unitA]})).toMatchObject(quantity1AInv);
-
-    expect(() => ParseMath.collapseDivide(unitA, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapseDivide(unitA, 5)).toMatchObject(quantity02A);
-    expect(ParseMath.collapseDivide(unitA, unitA)).toMatchObject(new Unit('(A)/(A)', '(unit A)/(unit A)'));
-    expect(ParseMath.collapseDivide(unitA, unitB)).toMatchObject(unitAB);
-    expect(ParseMath.collapseDivide(unitA, {type: 'mult', factors: [5, unitA]})).toMatchObject(new Quantity(1 / 5, new Unit('()/(A)*A', '()/(unit A)*unit A')));
-
-    expect(() => ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, 5)).toMatchObject(quantity1A);
-    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, unitA)).toMatchObject(new Quantity(5, new Unit('(A)/(A)', '(unit A)/(unit A)')));
-    expect(ParseMath.collapseDivide({type: 'mult', factors: [5, unitA]}, {type: 'mult', factors: [5, unitA]})).toMatchObject(new Quantity(1, new Unit('(A)/(A)', '(unit A)/(unit A)')));
-});
-
-test('collapsePower', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitC: Unit = new Unit('C', 'unit C', {L: 1}, 1);
-
-    expect(() => ParseMath.collapsePower({type: 'empty'}, {type: 'empty'})).toThrow(ValueError);
-    expect(() => ParseMath.collapsePower({type: 'empty'}, 5)).toThrow(ValueError);
-    expect(() => ParseMath.collapsePower({type: 'empty'}, unitA)).toThrow(ValueError);
-    expect(() => ParseMath.collapsePower({type: 'empty'}, {type: 'mult', factors: [5, unitA]})).toThrow(ValueError);
-
-    expect(() => ParseMath.collapsePower(5, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapsePower(5, 5)).toBe(5 ** 5);
-    expect(() => ParseMath.collapsePower(5, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapsePower(5, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
-    expect(ParseMath.collapsePower(5, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toBe(5 ** 10);
-
-    expect(() => ParseMath.collapsePower(unitA, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapsePower(unitA, 5)).toMatchObject(unitA.power(5));
-    expect(() => ParseMath.collapsePower(unitA, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapsePower(unitA, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
-    expect(ParseMath.collapsePower(unitA, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toMatchObject(unitA.power(10));
-
-    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'empty'})).toThrow(ValueError);
-    expect(ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, 5)).toMatchObject(new Quantity(5, unitA).power(5));
-    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, unitA)).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'mult', factors: [5, unitA]})).toThrow(InvalidOperation);
-    expect(ParseMath.collapsePower({type: 'mult', factors: [5, unitA]}, {type: 'div', numerator: {type: 'mult', factors: [5, unitA]}, denominator: unitC})).toMatchObject(new Quantity(5, unitA).power(10));
-});
-
-test('collapseMathTree', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitB: Unit = unitA.multiply(unitA);
-    const unitC: Unit = new Unit('C', 'unit C', {M: 1}, 2, 1);
-    const unitAC: Unit = unitA.divide(unitC);
-
-    const quantityA: Quantity = new Quantity(5, unitA);
-    const quantityB: Quantity = new Quantity(-5, unitA);
-
-    // Base types
-    expect(ParseMath.collapseMathTree(5)).toBe(5);
-    expect(ParseMath.collapseMathTree(unitA)).toMatchObject(unitA);
-    expect(ParseMath.collapseMathTree({type: 'empty'})).toBe(null);
-
-    // Oppose
-    expect(() => ParseMath.collapseMathTree({type: 'oppose', element: {type: 'empty'}})).toThrow(ValueError);
-    expect(() => ParseMath.collapseMathTree({type: 'oppose', element: unitA})).toThrow(InvalidOperation);
-    expect(ParseMath.collapseMathTree({type: 'oppose', element: 5})).toBe(-5);
-    expect(ParseMath.collapseMathTree({type: 'oppose', element: {type: 'mult', factors: [-5, unitA]}})).toMatchObject(quantityA);
-    expect(ParseMath.collapseMathTree({type: 'oppose', element: {type: 'mult', factors: [5, unitA]}})).toMatchObject(quantityB);
-
-    // Multiply
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: []})).toBe(null);
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5]})).toBe(5);
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, 5, -1]})).toBe(-25);
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, unitA]})).toMatchObject(quantityA);
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: [5, -1, unitA]})).toMatchObject(quantityB);
-    expect(ParseMath.collapseMathTree({type: 'mult', factors: [unitA, unitA]})).toMatchObject(unitB);
-
-    // Add
-    expect(ParseMath.collapseMathTree({type: 'add', terms: []})).toBe(null);
-    expect(ParseMath.collapseMathTree({type: 'add', terms: [5]})).toBe(5);
-    expect(ParseMath.collapseMathTree({type: 'add', terms: [5, 5, -10]})).toBe(0);
-    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [5, 5, unitA]})).toThrow(InvalidOperation);
-    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [unitA, unitA]})).toThrow(InvalidOperation);
-    expect(ParseMath.collapseMathTree({type: 'add', terms: [5, 5, {type: 'mult', factors: [-10, Unit.ONE]}]})).toMatchObject(Quantity.zero());
-    expect(() => ParseMath.collapseMathTree({type: 'add', terms: [5, 5, {type: 'mult', factors: [-10, unitA]}]})).toThrow(UnitMismatchError);
-    expect(ParseMath.collapseMathTree({type: 'add', terms: [
-        {type: 'mult', factors: [5, unitA]},
-        {type: 'mult', factors: [5, unitA]},
-        {type: 'mult', factors: [-10, unitA]}
-    ]})).toMatchObject(Quantity.zero(unitA));
-
-    // Divide
-    expect(() => ParseMath.collapseMathTree({
-        type: 'div',
-        numerator: {type: 'empty'},
-        denominator: {type: 'empty'}
-    })).toThrow(ValueError);
-    expect(ParseMath.collapseMathTree({
-        type: 'div',
-        numerator: 5,
-        denominator: {type: 'mult', factors: [5, 2]}
-    })).toBe(1 / 2);
-    expect(ParseMath.collapseMathTree({
-        type: 'div',
-        numerator: {type: 'mult', factors: [5, unitA]},
-        denominator: -1
-    })).toMatchObject(quantityB);
-    expect(ParseMath.collapseMathTree({
-        type: 'div',
-        numerator: {type: 'mult', factors: [5, unitA]},
-        denominator: {type: 'mult', factors: [1, unitC]}
-    })).toMatchObject(new Quantity(5, unitAC));
-    expect(ParseMath.collapseMathTree({
-        type: 'div',
-        numerator: unitA,
-        denominator: unitC
-    })).toMatchObject(unitAC);
-
-    // Power
-    expect(() => ParseMath.collapseMathTree({type: 'pow', base: {type: 'empty'}, exponent: {type: 'empty'}})).toThrow(ValueError);
-    expect(() => ParseMath.collapseMathTree({type: 'pow', base: unitA, exponent: unitA})).toThrow(InvalidOperation);
-    expect(ParseMath.collapseMathTree({type: 'pow', base: 5, exponent: 5})).toBe(5 ** 5);
-    expect(ParseMath.collapseMathTree({type: 'pow', base: unitA, exponent: 5})).toMatchObject(unitA.power(5));
-    expect(ParseMath.collapseMathTree({type: 'pow', base: {type: 'mult', factors: [5, unitA]}, exponent: 5})).toMatchObject(quantityA.power(5));
-});
+/* */

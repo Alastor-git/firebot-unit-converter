@@ -1,4 +1,4 @@
-import { UnexpectedError, UnitNotFoundError } from "./errors";
+import { UnitNotFoundError } from "./errors";
 import { Prefix } from "./prefix";
 import { Unit } from "./unit";
 import { logger } from "@shared/firebot-modules";
@@ -84,49 +84,5 @@ export class UnitParser {
             return foundUnit.applyPrefix(prefix, unitSymbol);
         }
         throw new UnitNotFoundError(candidate);
-    }
-
-    static parseMathTreeUnits(tree: MathTree): MathTree<Unit> {
-        switch (typeof tree) {
-            case 'number':
-                return tree;
-            case 'string':
-                return UnitParser.parseUnit(tree);
-            case 'object':
-                switch (tree.type) {
-                    case 'empty':
-                        return tree;
-                    case 'add':
-                        return {
-                            type: 'add',
-                            terms: tree.terms.map((term: MathTree): MathTree<Unit> => UnitParser.parseMathTreeUnits(term))
-                        };
-                    case 'oppose':
-                        return {type: 'oppose', element: UnitParser.parseMathTreeUnits(tree.element)};
-                    case 'div':
-                        return {
-                            type: 'div',
-                            numerator: UnitParser.parseMathTreeUnits(tree.numerator),
-                            denominator: UnitParser.parseMathTreeUnits(tree.denominator)
-                        };
-                    case 'mult':
-                        return {
-                            type: 'mult',
-                            factors: tree.factors.map((factor: MathTree): MathTree<Unit> => UnitParser.parseMathTreeUnits(factor))
-                        };
-                    case 'pow':
-                        return {
-                            type: 'pow',
-                            base: UnitParser.parseMathTreeUnits(tree.base),
-                            exponent: UnitParser.parseMathTreeUnits(tree.exponent)
-                        };
-                    /* istanbul ignore next */
-                    default:
-                        throw new UnexpectedError(`Unrecognized tree element ${JSON.stringify(tree)}. This shouldn't happen. `);
-                }
-            /* istanbul ignore next */
-            default:
-                throw new UnexpectedError(`Unexpected object ${tree} received instead of a MathTree object. This shouldn't happen. `);
-        }
     }
 }
