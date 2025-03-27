@@ -1,7 +1,7 @@
-import { Unit } from "@/unit";
 import { MathTree } from "./abstract-mathtree";
 import { Quantity } from "@/quantity";
 import { ValueError } from "@/errors";
+import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export class Multiply extends MathTree {
     factors: MathTree[];
@@ -15,11 +15,11 @@ export class Multiply extends MathTree {
         return new Multiply(...this.factors.map((term: MathTree): MathTree => term.parseUnits()));
     }
 
-    collapse(): Unit | Quantity | number | null {
+    collapse(): AbstractUnit | Quantity | number | null {
         return this.factors.reduce((total, current) => Multiply.collapsePair(total, current), null);
     }
 
-    static collapsePair(totalValue: Unit | Quantity | number | null, newFactor: MathTree): Unit | Quantity | number {
+    static collapsePair(totalValue: AbstractUnit | Quantity | number | null, newFactor: MathTree): AbstractUnit | Quantity | number {
         const newFactorValue = newFactor.collapse();
         if (newFactorValue === null) {
             throw new ValueError(`Cannot multiply an empty group.`);
@@ -29,9 +29,9 @@ export class Multiply extends MathTree {
             return totalValue.multiply(newFactorValue);
         } else if (newFactorValue instanceof Quantity) {
             return newFactorValue.multiply(totalValue);
-        } else if (totalValue instanceof Unit) {
+        } else if (totalValue instanceof AbstractUnit) {
             return totalValue.multiply(newFactorValue);
-        } else if (newFactorValue instanceof Unit) {
+        } else if (newFactorValue instanceof AbstractUnit) {
             return newFactorValue.multiply(totalValue);
         } else { // typeof totalValue === 'number' && typeof newFactorValue === 'number'
             return totalValue * newFactorValue;

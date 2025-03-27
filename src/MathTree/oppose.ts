@@ -1,7 +1,7 @@
 import { InvalidOperation, ValueError } from "@/errors";
 import { MathTree } from "./abstract-mathtree";
-import { Unit } from "@/unit";
 import { Quantity } from "@/quantity";
+import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export class Oppose extends MathTree {
     element: MathTree;
@@ -19,7 +19,7 @@ export class Oppose extends MathTree {
             const elementValue = this.element.collapse();
             if (elementValue === null) {
                 throw new ValueError(`Cannot oppose an empty group.`);
-            } else if (elementValue instanceof Unit) {
+            } else if (elementValue instanceof AbstractUnit) {
                 throw new InvalidOperation(`Opposition cannot be performed on pure units.`);
             } else if (typeof elementValue === 'number') {
                 return -elementValue;

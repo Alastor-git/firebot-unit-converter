@@ -1,7 +1,10 @@
-import { ValueError } from "./errors";
+import "@/mocks/firebot-modules";
+import { logger } from "@/shared/firebot-modules";
+import { ValueError } from "../errors";
 import { Prefix } from "./prefix";
-import { Quantity } from "./quantity";
-import { Unit, UnitDimensions } from "./unit";
+import { Quantity } from "../quantity";
+import { Unit } from "./unit";
+import { UnitDimensions } from "./abstract-unit";
 
 const unitSymbol1: string = "uA";
 const unitSymbol2: string = "uB";
@@ -28,6 +31,8 @@ test("Constructor", () => {
     expect(unitA.dimensions).toMatchObject(dimensions1);
     expect(unitA.coeff).toBe(coeff1);
     expect(unitA.offset).toBe(offset1);
+    expect(unitA).toHaveProperty('_preferredUnitSymbol', unitSymbol1);
+    expect(unitB).toHaveProperty('_preferredUnitSymbol', unitSymbol1);
 
     let testObject: Unit;
     testObject = new Unit('a', 'b');
@@ -43,6 +48,33 @@ test("Constructor", () => {
     expect(testObject).toHaveProperty('dimensions', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7});
     expect(testObject).toHaveProperty('coeff', 8);
     expect(testObject).toHaveProperty('offset', 9);
+});
+
+test('preferredUnitSymbol', () => {
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
+    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+
+    expect(unitA.preferredUnitSymbol).toBe(unitSymbol1);
+    expect(unitB.preferredUnitSymbol).toBe(unitSymbol1);
+
+    unitA._preferredUnitSymbol = null;
+    expect(() => unitA.preferredUnitSymbol).toThrow(ValueError);
+
+    expect(() => {
+        unitA.preferredUnitSymbol = unitSymbol2;
+    }).toThrow(ValueError);
+    unitB.preferredUnitSymbol = unitSymbol2;
+    expect(unitB.preferredUnitSymbol).toBe(unitSymbol2);
+});
+
+test('preferredSymbol', () => {
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
+    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+
+    expect(unitA.preferredSymbol).toBe(unitSymbol1);
+    expect(unitB.preferredSymbol).toBe(unitSymbol1);
+    unitB.preferredUnitSymbol = unitSymbol2;
+    expect(unitB.preferredSymbol).toBe(unitSymbol2);
 });
 
 test("isSameDimension", () => {
@@ -227,14 +259,15 @@ test("power", () => {
 test('applyPrefix', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1});
     const unitB: Unit = new Unit(['A', 'B'], unitA.name, unitA.dimensions);
-    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3);
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3);
     const untikA: Unit = new Unit(
-        `${prefix_k.symbol}${unitA.symbols[0]}`,
+        `${prefix_k.symbol}${unitA.preferredUnitSymbol}`,
         `${prefix_k.name}${unitA.name}`,
         unitA.dimensions,
         unitA.coeff * prefix_k.factor,
         unitA.offset
     );
+    untikA._preferredUnitSymbol = null;
     const untikB: Unit = new Unit(
         unitB.symbols.map(symbol => `${prefix_k.symbol}${symbol}`),
         `${prefix_k.name}${unitB.name}`,
@@ -243,8 +276,10 @@ test('applyPrefix', () => {
         unitB.offset
     );
     expect(unitA.applyPrefix(prefix_k)).toMatchObject(untikA);
+    untikA._preferredUnitSymbol = 'A';
     expect(unitA.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
     expect(unitB.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
+    untikB._preferredUnitSymbol = null;
     expect(unitB.applyPrefix(prefix_k)).toMatchObject(untikB);
     expect(() => unitB.applyPrefix(prefix_k, 'C')).toThrow(ValueError);
 });

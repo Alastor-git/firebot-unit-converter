@@ -1,7 +1,8 @@
 import { ValueError } from "@/errors";
 import { MathTree } from "./abstract-mathtree";
-import { Unit } from "@/unit";
+import { Unit } from "@/Unit/unit";
 import { Quantity } from "@/quantity";
+import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export class Divide extends MathTree {
     numerator: MathTree;
@@ -17,7 +18,7 @@ export class Divide extends MathTree {
         return new Divide(this.numerator.parseUnits(), this.denominator.parseUnits());
     }
 
-    collapse(): Quantity | Unit | number {
+    collapse(): Quantity | AbstractUnit | number {
         const numeratorValue = this.numerator.collapse();
         const denominatorValue = this.denominator.collapse();
         if (numeratorValue === null || denominatorValue === null) {
@@ -28,7 +29,7 @@ export class Divide extends MathTree {
             return numeratorValue.divide(denominatorValue);
         } else if (denominatorValue instanceof Quantity) {
             return Quantity.ONE.divide(denominatorValue).multiply(numeratorValue);
-        } else if (numeratorValue instanceof Unit) {
+        } else if (numeratorValue instanceof AbstractUnit) {
             return numeratorValue.divide(denominatorValue);
         } else { // denominatorValue instanceof Unit
             return Unit.ONE.divide(denominatorValue).multiply(numeratorValue);

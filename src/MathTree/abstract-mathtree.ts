@@ -1,9 +1,9 @@
 import { Quantity } from "@/quantity";
-import { Unit } from "@/unit";
+import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export abstract class MathTree {
     abstract parseUnits(): MathTree;
-    abstract collapse(): Unit | Quantity | number | null;
+    abstract collapse(): AbstractUnit | Quantity | number | null;
 
     toString() {
         return JSON.stringify(this);

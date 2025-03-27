@@ -1,6 +1,7 @@
 import { UnitNotFoundError } from "./errors";
-import { Prefix } from "./prefix";
-import { Unit } from "./unit";
+import { AbstractUnit } from "./Unit/abstract-unit";
+import { Prefix } from "./Unit/prefix";
+import { Unit } from "./Unit/unit";
 import { logger } from "@shared/firebot-modules";
 
 
@@ -18,7 +19,7 @@ export class UnitParser {
             // Check that unit isn't already parsed as something else
             try {
                 const parsedUnit = UnitParser.parseUnit(symbol);
-                logger.warn(`UnitConverter: ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} and being parsed as ${parsedUnit.symbols[0]}. One of them isn't gonna work.`);
+                logger.warn(`UnitConverter: ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} and being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
             } catch {
                 // symbol isn't conflicting with any of the currently registered combinations
             }
@@ -26,7 +27,7 @@ export class UnitParser {
             for (const prefixSymbol of Object.keys(UnitParser.registeredPrefixes)) {
                 try {
                     const parsedUnit = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
-                    logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.symbols[0]}. One of them isn't gonna work.`);
+                    logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
                 } catch {
                     // `${prefixSymbol}${symbol}` isn't conflicting with any of the currently registered combinations
                 }
@@ -45,7 +46,7 @@ export class UnitParser {
         for (const unitSymbol of Object.keys(UnitParser.registeredUnits)) {
             try {
                 const parsedUnit = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
-                logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.symbols[0]}. One of them isn't gonna work.`);
+                logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
             } catch {
                 // `${prefix.symbol}${unitSymbol}` isn't conflicting with any of the currently registered combinations
             }
@@ -53,7 +54,7 @@ export class UnitParser {
         UnitParser.registeredPrefixes[prefix.symbol] = prefix;
     }
 
-    static parseUnit(candidate: string): Unit {
+    static parseUnit(candidate: string): AbstractUnit {
         candidate = candidate.trim();
         let unitSymbol: string = "";
         let prefixSymbol: string = "";
@@ -84,5 +85,38 @@ export class UnitParser {
             return foundUnit.applyPrefix(prefix, unitSymbol);
         }
         throw new UnitNotFoundError(candidate);
+    }
+
+    static findPrefixFromFactor(desiredFactor: number, base?: number): Prefix | null {
+        for (const prefix of Object.values(UnitParser.registeredPrefixes)) {
+            if (desiredFactor === prefix.factor && (!base || base === prefix.base)) {
+                return prefix;
+            }
+        }
+        return null;
+    }
+
+    static findPrefixFromExponent(exponent: number, base: number = 10): Prefix | null {
+        for (const prefix of Object.values(UnitParser.registeredPrefixes)) {
+            if (exponent === prefix.exponent && base === prefix.base) {
+                return prefix;
+            }
+        }
+        return null;
+    }
+
+    static findBestPrefixFromExponent(exponent: number, base: number = 10): Prefix | null {
+        let currentBestPrefix: Prefix | undefined;
+        let currentBestExponent: number = 0;
+        for (const prefix of Object.values(UnitParser.registeredPrefixes)) {
+            if (base === prefix.base && prefix.exponent / exponent > 0 && prefix.exponent / exponent <= 1 && currentBestExponent / prefix.exponent < 1) {
+                logger.debug(`Looking for exponent ${exponent}, ${prefix.name} (${prefix.exponent}) is better than ${currentBestPrefix?.name} (${currentBestExponent})`);
+                currentBestPrefix = prefix;
+                currentBestExponent = prefix.exponent;
+            } else {
+                logger.debug(`Looking for exponent ${exponent}, ${prefix.name} (${prefix.exponent}) is worse than ${currentBestPrefix?.name} (${currentBestExponent})`);
+            }
+        }
+        return currentBestPrefix ? currentBestPrefix : null;
     }
 }

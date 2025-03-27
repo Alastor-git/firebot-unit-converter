@@ -9,6 +9,30 @@ class UnitConverterError extends Error {
     }
 }
 
+export class UnitError extends UnitConverterError {
+    constructor(message: string) {
+        super(`Unit error : ${message}`);
+
+        this.name = "UnitError";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, UnitError.prototype);
+    }
+
+}
+
+export class PrefixError extends UnitConverterError {
+    constructor(message: string) {
+        super(`Prefix error : ${message}`);
+
+        this.name = "PrefixError";
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, PrefixError.prototype);
+    }
+
+}
+
 export class UnitMismatchError extends UnitConverterError {
     constructor(message: string) {
         super(`Unit mismatch : ${message}`);
@@ -23,7 +47,7 @@ export class UnitMismatchError extends UnitConverterError {
 
 export class UnitNotFoundError extends UnitConverterError {
     constructor(message: string) {
-        super(`Unit not found in ${message}`);
+        super(`Unit not found in "${message}"`);
 
         this.name = "UnitNotFoundError";
 

@@ -1,10 +1,10 @@
+import { AbstractUnit } from "@/Unit/abstract-unit";
 import { MathTree } from "./abstract-mathtree";
-import { Unit } from "@/unit";
 
 export class UnitSymbol extends MathTree {
-    value: Unit;
+    value: AbstractUnit;
 
-    constructor(value: Unit) {
+    constructor(value: AbstractUnit) {
         super();
         this.value = value;
     }
@@ -13,7 +13,7 @@ export class UnitSymbol extends MathTree {
         return this;
     }
 
-    collapse(): Unit {
+    collapse(): AbstractUnit {
         return this.value;
     }
 }

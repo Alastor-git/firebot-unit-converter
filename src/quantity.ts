@@ -1,16 +1,17 @@
 import { UnitMismatchError, ValueError } from "./errors";
-import { Unit } from "./unit";
+import { AbstractUnit } from "./Unit/abstract-unit";
+import { Unit } from "./Unit/unit";
 
 export class Quantity {
-    unit: Unit;
+    unit: AbstractUnit;
     value: number;
 
-    constructor(value: number, unit: Unit) {
+    constructor(value: number, unit: AbstractUnit) {
         this.value = value;
         this.unit = unit;
     }
 
-    static zero(unit: Unit = Unit.ONE) {
+    static zero(unit: AbstractUnit = Unit.ONE) {
         return new Quantity(0, unit);
     }
 
@@ -77,18 +78,18 @@ export class Quantity {
         return new Quantity(this.value - quantity.value, this.unit);
     }
 */
-    multiply(quantity: Quantity | Unit | number): Quantity {
+    multiply(quantity: Quantity | AbstractUnit | number): Quantity {
         if (quantity instanceof Quantity) {
             // Unit multiplication assumes that both units are deltas, so we don't need to do it here
             return new Quantity(this.value * quantity.value, this.unit.multiply(quantity.unit));
-        } else if (quantity instanceof Unit) {
+        } else if (quantity instanceof AbstractUnit) {
             return new Quantity(this.value, this.unit.multiply(quantity));
         }
         return new Quantity(this.value * quantity, this.unit);
     }
 
-    divide(quantity: Quantity | Unit | number): Quantity {
-        if (quantity instanceof Unit) {
+    divide(quantity: Quantity | AbstractUnit | number): Quantity {
+        if (quantity instanceof AbstractUnit) {
             return new Quantity(this.value, this.unit.divide(quantity));
         }
         if (Quantity.isNull(quantity)) {
@@ -109,7 +110,7 @@ export class Quantity {
         return new Quantity(this.value !== 0 ? this.value ** power : 0, this.unit.power(power));
     }
 
-    convert(newUnit: Unit): Quantity {
+    convert(newUnit: AbstractUnit): Quantity {
         if (!this.unit.isSameDimension(newUnit)) {
             // FIXME: units display as [Object object]
             throw new UnitMismatchError(`${this.unit} doesn't match ${newUnit}`);
@@ -122,6 +123,6 @@ export class Quantity {
     }
 
     toString(): string {
-        return `${this.value} ${this.unit.symbols[0]}`;
+        return `${this.value} ${this.unit.preferredUnitSymbol}`;
     }
 }

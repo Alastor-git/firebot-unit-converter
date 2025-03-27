@@ -1,7 +1,7 @@
-import { Unit } from "@/unit";
 import { MathTree } from "./abstract-mathtree";
 import { Quantity } from "@/quantity";
 import { InvalidOperation, ValueError } from "@/errors";
+import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export class Add extends MathTree {
     terms: MathTree[];
@@ -15,15 +15,15 @@ export class Add extends MathTree {
         return new Add(...this.terms.map((term: MathTree): MathTree => term.parseUnits()));
     }
 
-    collapse(): Unit | Quantity | number | null {
+    collapse(): AbstractUnit | Quantity | number | null {
         return this.terms.reduce((total, current) => Add.collapsePair(total, current), null);
     }
 
-    static collapsePair(totalValue: Unit | Quantity | number | null, newTerm: MathTree): Quantity | number {
+    static collapsePair(totalValue: AbstractUnit | Quantity | number | null, newTerm: MathTree): Quantity | number {
             const newTermValue = newTerm.collapse();
             if (newTermValue === null) {
                 throw new ValueError(`Cannot add an empty group.`);
-            } else if (totalValue instanceof Unit || newTermValue instanceof Unit) {
+            } else if (totalValue instanceof AbstractUnit || newTermValue instanceof AbstractUnit) {
                 throw new InvalidOperation(`Addition cannot be performed on a pure unit.`);
             } else if (totalValue === null) {
                 return newTermValue;

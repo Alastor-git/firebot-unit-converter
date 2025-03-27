@@ -3,8 +3,8 @@ import { UnitParser } from "./unit-parser";
 import { ParseMath } from "./math-parser";
 import { DelimiterError, DepthLimitExceededError, InvalidOperation } from "./errors";
 import { MathTree, Empty, StringSymbol, Numeric, Add, Oppose, Multiply, Divide, Power } from './MathTree';
-import { Unit } from "./unit";
-import { Prefix } from "./prefix";
+import { Unit } from "./Unit/unit";
+import { Prefix } from "./Unit/prefix";
 import { Quantity } from "./quantity";
 
 /* */
@@ -661,9 +661,9 @@ test('match', () => {
     const unit_m: Unit = new Unit('m', 'meter', { L: 1 }); // eslint-disable-line camelcase
     const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 2.54e-2); // eslint-disable-line camelcase
 
-    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3); // eslint-disable-line camelcase
-    const prefix_c: Prefix = new Prefix('c', 'centi', 1e-2); // eslint-disable-line camelcase
-    const prefix_m: Prefix = new Prefix('m', 'mili', 1e-3); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
+    const prefix_c: Prefix = new Prefix('c', 'centi', 10, -2); // eslint-disable-line camelcase
+    const prefix_m: Prefix = new Prefix('m', 'mili', 10, -3); // eslint-disable-line camelcase
 
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_m);

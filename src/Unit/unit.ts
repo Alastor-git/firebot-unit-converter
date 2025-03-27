@@ -1,22 +1,11 @@
-import { ValueError } from "./errors";
 import { Prefix } from "./prefix";
-import { Quantity } from "./quantity";
+import { Quantity } from "../quantity";
+import { PrefixedUnit } from "./prefixed-unit";
+import { AbstractUnit, UnitDimensions } from "./abstract-unit";
 
-export type UnitDimensions = {
-    L: number; //     Length
-    M: number; //     Mass
-    T: number; //     Time
-    I: number; //     Electric current
-    THETA: number; // Thermodynamic temperature
-    N: number; //     Amount of substance
-    J: number; //     Light intensity
-    // TODO: unit of angle even though it's not a physical unit ?
-};
-
-export class Unit {
+export class Unit extends AbstractUnit {
     symbols: string[];
     name: string;
-
 
     coeff: number;
     offset: number;
@@ -30,6 +19,7 @@ export class Unit {
                 dimensions: Partial<UnitDimensions> = {},
                 coeff: number = 1,
                 offset: number = 0) {
+        super();
         this.dimensions = {
             L: dimensions.L ?? 0,
             M: dimensions.M ?? 0,
@@ -44,46 +34,20 @@ export class Unit {
         this.offset = offset;
 
         this.symbols = Array.isArray(symbol) ? symbol : [symbol];
+        this.preferredUnitSymbol = this.symbols[0];
         this.name = name;
     }
 
-    isSameDimension(otherUnit: Unit): boolean {
-        return (this.dimensions.L === otherUnit.dimensions.L &&
-                this.dimensions.M === otherUnit.dimensions.M &&
-                this.dimensions.T === otherUnit.dimensions.T &&
-                this.dimensions.I === otherUnit.dimensions.I &&
-                this.dimensions.THETA === otherUnit.dimensions.THETA &&
-                this.dimensions.N === otherUnit.dimensions.N &&
-                this.dimensions.J === otherUnit.dimensions.J);
-    }
-
-    isDeltaEqual(otherUnit: Unit) {
-        return (this.isSameDimension(otherUnit) &&
-                this.coeff === otherUnit.coeff);
-    }
-
-    isEqual(otherUnit: Unit) {
-        return (this.isSameDimension(otherUnit) &&
-                this.coeff === otherUnit.coeff &&
-                this.offset === otherUnit.offset);
+    copy(): Unit {
+        const copy = new Unit(this.symbols, this.name, { ...this.dimensions }, this.coeff, this.offset);
+        copy.preferredUnitSymbol = this.preferredUnitSymbol;
+        return copy;
     }
 
     static ONE: Unit = new Unit('', '', {}, 1, 0);
 
-    isDimensionless(): boolean {
-        return this.isSameDimension(Unit.ONE);
-    }
-
     isNeutralElement(): boolean {
         return this.isEqual(Unit.ONE);
-    }
-
-    isAffine(): boolean {
-        return this.offset !== 0;
-    }
-
-    isLinear(): boolean {
-        return this.offset === 0;
     }
 
     deltaUnit(): Unit {
@@ -94,10 +58,10 @@ export class Unit {
         return new Unit(this.symbols, this.name, this.dimensions, this.coeff);
     }
 
-    multiply(other: Unit): Unit;
+    multiply(other: AbstractUnit): Unit;
     multiply(other: number): Quantity;
-    multiply(other: Unit | number): Unit | Quantity;
-    multiply(other: Unit | number): Unit | Quantity {
+    multiply(other: AbstractUnit | number): Unit | Quantity;
+    multiply(other: AbstractUnit | number): Unit | Quantity {
         if (typeof other === 'number') {
             return new Quantity(other, this);
         }
@@ -119,9 +83,9 @@ export class Unit {
     }
 
     divide(other: number): Quantity;
-    divide(other: Unit): Unit;
-    divide(other: Unit | number): Unit | Quantity;
-    divide(other: Unit | number): Unit | Quantity {
+    divide(other: AbstractUnit): Unit;
+    divide(other: AbstractUnit | number): Unit | Quantity;
+    divide(other: AbstractUnit | number): Unit | Quantity {
         if (typeof other === 'number') {
             return new Quantity(1 / other, this);
         }
@@ -160,18 +124,8 @@ export class Unit {
             );
     }
 
-    applyPrefix(prefix: Prefix, unitSymbol?: string): Unit {
-        if (unitSymbol && !this.symbols.includes(unitSymbol)) {
-            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}`);
-        }
-        const symbols: string[] = unitSymbol ? [`${prefix.symbol}${unitSymbol}`] : this.symbols.map(unitSymbol => `${prefix.symbol}${unitSymbol}`);
-        return new Unit(
-            symbols,
-            `${prefix.name}${this.name}`,
-            this.dimensions,
-            this.coeff * prefix.factor,
-            this.offset
-        );
+    applyPrefix(prefix: Prefix, unitSymbol?: string): PrefixedUnit {
+        return new PrefixedUnit(prefix, this, unitSymbol);
     }
     // TODO: toString
     // TODO: Keep a record of the UnitTree in a similar fashion to MathTree ?

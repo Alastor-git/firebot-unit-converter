@@ -1,6 +1,7 @@
 import { UnitMismatchError, ValueError } from "./errors";
 import { Quantity } from "./quantity";
-import { Unit, UnitDimensions } from "./unit";
+import { UnitDimensions } from "./Unit/abstract-unit";
+import { Unit } from "./Unit/unit";
 
 
 const unitSymbol1: string = "uA";

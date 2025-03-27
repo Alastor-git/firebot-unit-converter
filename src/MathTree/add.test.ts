@@ -1,8 +1,8 @@
 import "@/mocks/firebot-modules";
 import { UnitParser } from "@/unit-parser";
 import { InvalidOperation, UnitMismatchError, ValueError } from "@/errors";
-import { Unit } from "@/unit";
-import { Prefix } from "@/prefix";
+import { Unit } from "@/Unit/unit";
+import { Prefix } from "@/Unit/prefix";
 import { Quantity } from "@/quantity";
 import { StringSymbol } from './string';
 import { UnitSymbol } from "./unit";
@@ -21,13 +21,13 @@ test('constructor', () => {
 
 test('parseUnits', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 
     UnitParser.registerUnit(unitA);
     UnitParser.registerPrefix(prefix_k);
     const aString: StringSymbol = new StringSymbol('A');
     const aSymbol: UnitSymbol = new UnitSymbol(unitA);
-    const kaSymbol: UnitSymbol = new UnitSymbol(unitA.applyPrefix(prefix_k));
+    const kaSymbol: UnitSymbol = new UnitSymbol(unitA.applyPrefix(prefix_k, 'A'));
     const num5: Numeric = new Numeric(5);
     const kaString: StringSymbol = new StringSymbol('kA');
 
@@ -73,7 +73,7 @@ test('collapsePair', () => {
 /* */
 test('collapse', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const prefix_k: Prefix = new Prefix('k', 'kilo', 1e3); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 
     UnitParser.registerUnit(unitA);
     UnitParser.registerPrefix(prefix_k);
