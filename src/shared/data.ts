@@ -39,6 +39,7 @@ export const UNITS = [
     new Unit('Gy', 'gray', { L: 2, T: -2 }),
     new Unit('Sv', 'sievert', { L: 2, T: -2 }),
     new Unit('kat', 'katal', { T: -1, N: 1 }),
+    new Unit('L', 'Liter', {L: 3}, 1e-3),
     // -----------------
     // Imperial system
     // -----------------

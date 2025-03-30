@@ -53,7 +53,7 @@ test('preferredUnitSymbol', () => {
     const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
     const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefix_k, unitB, unitSymbol2);
 
-    expect(() => prefixedUnitA.preferredUnitSymbol).toThrow(ValueError);
+    expect(prefixedUnitA.preferredUnitSymbol).toBe(unitA.preferredSymbol);
     expect(prefixedUnitB.preferredUnitSymbol).toBe(unitSymbol1);
     expect(prefixedUnitC.preferredUnitSymbol).toBe(unitSymbol2);
 
@@ -125,7 +125,7 @@ test('preferredSymbol', () => {
     const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
     const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
 
-    expect(() => prefixedUnitA.preferredSymbol).toThrow(ValueError);
+    expect(prefixedUnitA.preferredSymbol).toBe(`${prefix_k.symbol}${unitA.preferredSymbol}`);
     expect(prefixedUnitB.preferredSymbol).toBe(`${prefix_k.symbol}${unitSymbol1}`);
 });
 

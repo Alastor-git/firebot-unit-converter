@@ -35,7 +35,7 @@ export class PrefixedUnit extends AbstractUnit {
 
     get preferredUnitSymbol(): string {
         if (!this._preferredUnitSymbol) {
-            throw new ValueError(`Unit preferred symbol has not been defined.`);
+            return this.baseUnit.preferredUnitSymbol;
         }
         return this._preferredUnitSymbol;
     }
@@ -61,11 +61,7 @@ export class PrefixedUnit extends AbstractUnit {
     }
 
     deltaUnit(): PrefixedUnit {
-        try {
-            return new PrefixedUnit(this.prefix, this.baseUnit.deltaUnit(), this.preferredUnitSymbol);
-        } catch {
-            return new PrefixedUnit(this.prefix, this.baseUnit.deltaUnit());
-        }
+        return new PrefixedUnit(this.prefix, this.baseUnit.deltaUnit(), this._preferredUnitSymbol ?? undefined);
     }
 
     multiply(other: AbstractUnit): CompoundUnit;

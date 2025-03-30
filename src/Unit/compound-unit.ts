@@ -51,8 +51,8 @@ export class CompoundUnit extends AbstractUnit {
         if (componentsKeys.length === 1) {
             this.components[componentsKeys[0]].unit = this.components[componentsKeys[0]].unit.deltaUnit();
         }
-        // If this isn't the first component, the unit we add must be a delta unit
-        if (componentsKeys.length > 0) {
+        // If this isn't the first component or it is to a power, the unit we add must be a delta unit
+        if (componentsKeys.length > 0 || exponent !== 1) {
             unit = unit.deltaUnit();
         }
         // If the unit is already part of the compound, add to the component, otherwise add the unit.
@@ -86,17 +86,24 @@ export class CompoundUnit extends AbstractUnit {
     }
 
     updateUnit() {
+        let firstComponent: boolean = true;
+        // Initialize values that we recalculate
+        this.dimensions = { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
+        this.coeff = 1;
         // Update dimensions and total coefficient
         for (const component of Object.values(this.components)) {
             const componentDimensions = component.unit.dimensions;
             let dimension: keyof UnitDimensions;
             for (dimension in componentDimensions) {
                 if (Object.hasOwn(componentDimensions, dimension)) {
-                    this.dimensions[dimension] = componentDimensions[dimension] * component.unitExponent
-                                                + (this.dimensions[dimension] ? this.dimensions[dimension] : 0);
+                    this.dimensions[dimension] += componentDimensions[dimension] * component.unitExponent;
                 }
             }
-            this.coeff = this.coeff * component.prefixBase ** component.prefixExponent * component.unit.coeff ** component.unitExponent;
+            this.coeff *= component.prefixBase ** component.prefixExponent * component.unit.coeff ** component.unitExponent;
+            if (firstComponent) {
+                firstComponent = false;
+                this.offset = component.unit.offset;
+            }
         }
         const prefixedComponents: UnitComponent[] = this.updatePrefix();
         this.updateSymbol(prefixedComponents);
@@ -113,6 +120,8 @@ export class CompoundUnit extends AbstractUnit {
                 return false;
             }
             return true;
+        }).map((component) => { // Copy the components to not mute them
+            return {...component};
         });
         // See if we find the exact prefix for the remaining units
         sortedComponents.forEach((component, componentIndex) => {
@@ -167,6 +176,7 @@ export class CompoundUnit extends AbstractUnit {
             }
         }
         this.symbols = [symbolString];
+        this.preferredUnitSymbol = symbolString;
     }
 
     updateName(prefixedComponents: UnitComponent[]) {
@@ -178,9 +188,9 @@ export class CompoundUnit extends AbstractUnit {
             }
             first = false;
             if (component.prefix) {
-                nameString = `${nameString}${component.prefix?.symbol}`;
+                nameString = `${nameString}${component.prefix?.name}`;
             }
-            nameString = `${nameString}${component.unit.preferredSymbol}`;
+            nameString = `${nameString}${component.unit.name}`;
             if (component.unitExponent !== 1) {
                 nameString = `${nameString}^${component.unitExponent}`;
             }
