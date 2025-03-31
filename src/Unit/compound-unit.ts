@@ -5,6 +5,7 @@ import { AbstractUnit, UnitDimensions } from "./abstract-unit";
 import { Quantity } from "@/quantity";
 import { Prefix } from "./prefix";
 import { UnitParser } from "@/unit-parser";
+import { logger } from "@/shared/firebot-modules";
 
 type UnitComponent = {
             unit: Unit,
@@ -27,14 +28,15 @@ export class CompoundUnit extends AbstractUnit {
         throw new UnexpectedError(`Unimplemented method`);
     }
 
-    addFactor(unit: Unit | PrefixedUnit, exponent: number = 1) {
+    addFactor(unit: Unit | PrefixedUnit, exponent: number = 1): CompoundUnit {
         let unitSymbol: string;
         let baseUnit: Unit;
         let prefixBase: number;
         let prefixExponent: number;
         // If exponent is 0, we aren't changing anything
         if (exponent === 0) {
-            return;
+            this.updateUnit();
+            return this;
         }
         if (unit instanceof PrefixedUnit) {
             baseUnit = unit.baseUnit;
@@ -83,6 +85,7 @@ export class CompoundUnit extends AbstractUnit {
             };
         }
         this.updateUnit();
+        return this;
     }
 
     updateUnit() {
@@ -90,6 +93,7 @@ export class CompoundUnit extends AbstractUnit {
         // Initialize values that we recalculate
         this.dimensions = { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
         this.coeff = 1;
+        this.offset = 0;
         // Update dimensions and total coefficient
         for (const component of Object.values(this.components)) {
             const componentDimensions = component.unit.dimensions;
@@ -112,48 +116,76 @@ export class CompoundUnit extends AbstractUnit {
 
     updatePrefix(): UnitComponent[] {
         let remainingFactor: number = 1;
-        const sortedComponents: UnitComponent[] = Object.values(this.components).sort((componentA, componentB) => {
+        const sortedComponents: UnitComponent[] = Object.values(this.components).map((component) => { // Copy the components to not mutate them
+            return {...component};
+        }).sort((componentA, componentB) => { // Sort by ascending exponent
             return componentB.unitExponent - componentA.unitExponent;
-        }).filter((component) => { // Units with 0 exponent can't have a prefix
+        });
+        const sortedFilteredComponents: UnitComponent[] = sortedComponents.filter((component) => { // Units with 0 exponent can't have a prefix
             if (component.unitExponent === 0) {
-                remainingFactor = remainingFactor * component.prefixBase ** component.prefixExponent;
+                remainingFactor *= component.prefixBase ** component.prefixExponent;
                 return false;
             }
             return true;
-        }).map((component) => { // Copy the components to not mute them
-            return {...component};
         });
         // See if we find the exact prefix for the remaining units
-        sortedComponents.forEach((component, componentIndex) => {
-            const prefix: Prefix | null = UnitParser.findPrefixFromExponent(component.prefixExponent / component.unitExponent, component.prefixBase);
+        sortedFilteredComponents.forEach((component) => {
+            const currentPrefixExponent: number = component.prefixExponent;
+            const prefix: Prefix | null = UnitParser.findPrefixFromExponent(currentPrefixExponent / component.unitExponent, component.prefixBase);
             if (prefix) {
-                sortedComponents[componentIndex].prefix = prefix;
+                component.prefix = prefix;
             } else {
-                remainingFactor = remainingFactor * component.prefixBase ** component.prefixExponent;
+                remainingFactor *= component.prefixBase ** component.prefixExponent;
             }
         });
         if (remainingFactor === 1) {
-            return sortedComponents;
+            return sortedFilteredComponents;
         }
         // For units without a prefix, see if we can find a lower prefix
-        sortedComponents.forEach((component, componentIndex) => {
+        sortedFilteredComponents.forEach((component) => {
             if (!component.prefix) {
-                const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent(component.prefixExponent / component.unitExponent, component.prefixBase);
+                const currentPrefixExponent: number = component.prefixExponent;
+                const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent(currentPrefixExponent / component.unitExponent, component.prefixBase);
                 if (prefix) {
-                    sortedComponents[componentIndex].prefix = prefix;
-                    remainingFactor = remainingFactor / component.prefixBase ** (component.prefixExponent - prefix.exponent * component.unitExponent);
+                    component.prefix = prefix;
+                    remainingFactor /= component.prefixBase ** (prefix.exponent * component.unitExponent);
                 }
             }
         });
         if (remainingFactor === 1) {
-            return sortedComponents;
+            return sortedFilteredComponents;
         }
         // See if we can improve the prefix of a unit, starting from the highest exponent unit
-        // See if we can have a pair of prefixes for the remaining factor on a unit with no factor
-        // See if we can have a pair of prefixes for the remaining factor on a unit with already a factor
-        // Move to a quantity
+        sortedFilteredComponents.forEach((component) => {
+            if (component.prefix) {
+                const currentPrefixExponent: number = component.prefix.exponent * component.unitExponent;
+                const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
+                const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent((currentPrefixExponent + remainingExponent) / component.unitExponent, component.prefixBase);
+                if (prefix) {
+                    component.prefix = prefix;
+                    remainingFactor /= component.prefixBase ** ((prefix.exponent - currentPrefixExponent) * component.unitExponent);
+                }
+            } else {
+                const newPrefixBase: number = 10; // TODO: Have units store a preferred base so we can know what to pick here?
+                const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(newPrefixBase);
+                const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent(remainingExponent / component.unitExponent, newPrefixBase);
+                if (prefix) {
+                    component.prefix = prefix;
+                    component.prefixBase = newPrefixBase;
+                    remainingFactor /= component.prefixBase ** (prefix.exponent * component.unitExponent);
+                }
+            }
+        });
+        if (remainingFactor === 1) {
+            return sortedFilteredComponents;
+        }
+        // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
+        // Split a unit with an exponent > 1 into several factors with separate prefixes
+        // Split a unit with 0 exponent into a ratio of units with prefixes to account for the remaining prefactor
         // If we have a remaining factor, that's an error case
         if (remainingFactor !== 1) {
+            logger.debug(JSON.stringify(this));
+            logger.debug(JSON.stringify(sortedFilteredComponents));
             throw new UnexpectedError(`There was a remaining factor of ${remainingFactor} for this unit. `);
         }
         return [];
