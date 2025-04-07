@@ -182,13 +182,46 @@ export class CompoundUnit extends AbstractUnit {
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
         // Split a unit with an exponent > 1 into several factors with separate prefixes
         // Split a unit with 0 exponent into a ratio of units with prefixes to account for the remaining prefactor
+        sortedComponents.forEach((component) => {
+            if (remainingFactor !== 1 && component.unitExponent === 0) {
+                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+                const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
+                // At the numerator is the closest to the exact exponent approached from larger absolute values
+                const numeratorPrefix: Prefix | null = UnitParser.findNextPrefixFromExponent(remainingExponent, newPrefixBase);
+                const numeratorExponent: number = numeratorPrefix?.exponent ?? 0;
+                // At the denuminator, we take the largest prefix we can to account for all remaining prefixes
+                const denominatorPrefix: Prefix | null = UnitParser.findBestPrefixFromExponent(numeratorExponent - remainingExponent, newPrefixBase);
+                const denominatorExponent: number = denominatorPrefix?.exponent ?? 0;
+                // If we find the prefixes, add the unit
+                if (numeratorPrefix || denominatorPrefix) {
+                    sortedFilteredComponents.push({
+                        unit: component.unit,
+                        unitExponent: 1,
+                        prefixBase: newPrefixBase,
+                        prefixExponent: numeratorExponent,
+                        prefix: numeratorPrefix ?? undefined
+                    });
+                    sortedFilteredComponents.push({
+                        unit: component.unit,
+                        unitExponent: -1,
+                        prefixBase: newPrefixBase,
+                        prefixExponent: denominatorExponent,
+                        prefix: denominatorPrefix ?? undefined
+                    });
+                    remainingFactor /= newPrefixBase ** (numeratorExponent - denominatorExponent);
+                }
+            }
+        });
+        if (remainingFactor === 1) {
+            return sortedFilteredComponents;
+        }
         // If we have a remaining factor, that's an error case
         if (remainingFactor !== 1) {
             logger.debug(JSON.stringify(this));
             logger.debug(JSON.stringify(sortedFilteredComponents));
             throw new UnexpectedError(`There was a remaining factor of ${remainingFactor} for this unit. `);
         }
-        return [];
+        return sortedFilteredComponents;
     }
 
     updateSymbol(prefixedComponents: UnitComponent[]) {

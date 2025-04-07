@@ -119,4 +119,22 @@ export class UnitParser {
         }
         return currentBestPrefix ? currentBestPrefix : null;
     }
+
+    static findNextPrefixFromExponent(exponent: number, base: number = 10): Prefix | null {
+        let currentBestPrefix: Prefix | undefined;
+        let currentBestExponent: number = 0;
+        if (exponent === 0) {
+            return null;
+        }
+        for (const prefix of Object.values(UnitParser.registeredPrefixes)) {
+            if (base === prefix.base && prefix.exponent / exponent >= 1 && (currentBestExponent === 0 || currentBestExponent / prefix.exponent > 1)) {
+                logger.debug(`Looking for exponent ${exponent}, ${prefix.name} (${prefix.exponent}) is better than ${currentBestPrefix?.name} (${currentBestExponent})`);
+                currentBestPrefix = prefix;
+                currentBestExponent = prefix.exponent;
+            } else {
+                logger.debug(`Looking for exponent ${exponent}, ${prefix.name} (${prefix.exponent}) is worse than ${currentBestPrefix?.name} (${currentBestExponent})`);
+            }
+        }
+        return currentBestPrefix ? currentBestPrefix : null;
+    }
 }

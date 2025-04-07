@@ -135,3 +135,31 @@ test('findBestPrefixFromExponent', () => {
     expect(UnitParser.findBestPrefixFromExponent(2)).toMatchObject(prefix_h);
     expect(UnitParser.findBestPrefixFromExponent(0)).toBe(null);
 });
+
+test('findNextPrefixFromExponent', () => {
+
+    // TODO more completely test it
+    const prefix_M: Prefix = new Prefix('M', 'mega', 10, 6); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
+    const prefix_h: Prefix = new Prefix('h', 'hecto', 10, 2); // eslint-disable-line camelcase
+    const prefix_da: Prefix = new Prefix('da', 'deca', 10, 1); // eslint-disable-line camelcase
+    const prefix_d: Prefix = new Prefix('d', 'deci', 10, -1); // eslint-disable-line camelcase
+    const prefix_c: Prefix = new Prefix('c', 'centi', 10, -2); // eslint-disable-line camelcase
+    const prefix_m: Prefix = new Prefix('m', 'mili', 10, -3); // eslint-disable-line camelcase
+    const prefix_µ: Prefix = new Prefix('µ', 'micro', 10, -6); // eslint-disable-line camelcase
+
+    UnitParser.registerPrefix(prefix_M);
+    UnitParser.registerPrefix(prefix_k);
+    UnitParser.registerPrefix(prefix_h);
+    UnitParser.registerPrefix(prefix_da);
+    UnitParser.registerPrefix(prefix_d);
+    UnitParser.registerPrefix(prefix_c);
+    UnitParser.registerPrefix(prefix_m);
+    UnitParser.registerPrefix(prefix_µ);
+
+    expect(UnitParser.findNextPrefixFromExponent(-4)).toMatchObject(prefix_µ);
+    expect(UnitParser.findNextPrefixFromExponent(-2)).toMatchObject(prefix_c);
+    expect(UnitParser.findNextPrefixFromExponent(4)).toMatchObject(prefix_M);
+    expect(UnitParser.findNextPrefixFromExponent(2)).toMatchObject(prefix_h);
+    expect(UnitParser.findNextPrefixFromExponent(0)).toBe(null);
+});
