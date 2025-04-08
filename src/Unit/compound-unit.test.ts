@@ -418,7 +418,27 @@ test('addFactor', () => {
             }
         }
     ]
-    */
+     */
+    // Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
+    const unitMm: PrefixedUnit = new PrefixedUnit(prefixM, unitm);
+    const unitdam: PrefixedUnit = new PrefixedUnit(prefixda, unitm);
+    const unitH: CompoundUnit = new CompoundUnit(unitMm).addFactor(unitdam);
+    expect(unitH).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unitH.coeff).toBeCloseTo(1e7);// Due to float errors
+    expect(unitH).toHaveProperty('offset', 0);
+    expect(unitH).toHaveProperty('components',
+        {
+            'm': {
+                unit: unitm,
+                unitExponent: 2,
+                prefixBase: 10,
+                prefixExponent: 7
+            }
+        });
+    expect(unitH).toHaveProperty('name', 'megameter*decameter');
+    expect(unitH).toHaveProperty('symbols', ['Mm*dam']);
+    expect(unitH.preferredUnitSymbol).toBe('Mm*dam');
+    expect(unitH.preferredSymbol).toBe('Mm*dam');
     // cg / g = 0.01: We don't have a choice but to keep a ratio of units
     const unitcg: PrefixedUnit = new PrefixedUnit(prefixc, unitg);
     const unitI: CompoundUnit = new CompoundUnit(unitcg).addFactor(unitg, -1);
@@ -465,9 +485,9 @@ test('addFactor', () => {
 // Done: mm * km = m^2 : That one's easy, things cancel out
 // Done: µm * hm = cm^2 : First problem, we end up with prefixes that weren't there in the first place
 // Done: L * mg / dg = cL : Second problem, prefixes are moving from one unit to another.
-// TODO: dam hg * dm / mg mL = km^2 / cL : Add these two issues, we can end up with using none of the initial prefixes being pretty much the only solution, with the total prefix factor having to be spread across several units.
-// Todo: Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
-// Done: cg / g = 0.01: We don't have a choice but to keep a ratio of units
-// Done: Mg / dg = 1e5: We don't have a choice but to keep a ratio of units
 // Todo: Mm * mL * cg/g = dm * L : We have to downgrade something and upgrade something
 // Todo: Mm^2 * mL * cg/g = km^2 * daL
+// TODO: dam hg * dm / mg mL = km^2 / cL : Add these two issues, we can end up with using none of the initial prefixes being pretty much the only solution, with the total prefix factor having to be spread across several units.
+// Done: Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
+// Done: cg / g = 0.01: We don't have a choice but to keep a ratio of units
+// Done: Mg / dg = 1e5: We don't have a choice but to keep a ratio of units

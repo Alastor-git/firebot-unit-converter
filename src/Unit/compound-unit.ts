@@ -163,7 +163,7 @@ export class CompoundUnit extends AbstractUnit {
                 const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent((currentPrefixExponent + remainingExponent) / component.unitExponent, component.prefixBase);
                 if (prefix) {
                     component.prefix = prefix;
-                    remainingFactor /= component.prefixBase ** ((prefix.exponent - currentPrefixExponent) * component.unitExponent);
+                    remainingFactor /= component.prefixBase ** (prefix.exponent * component.unitExponent - currentPrefixExponent);
                 }
             } else {
                 const newPrefixBase: number = 10; // TODO: Have units store a preferred base so we can know what to pick here?
@@ -181,6 +181,46 @@ export class CompoundUnit extends AbstractUnit {
         }
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
         // Split a unit with an exponent > 1 into several factors with separate prefixes
+        const resortedFilteredComponents = [...sortedFilteredComponents].sort((component1, component2) => {
+            const exp1: number = Math.abs(component1.unitExponent) + 0.25 * (1 + Math.sign(component1.unitExponent));
+            const exp2: number = Math.abs(component2.unitExponent) + 0.25 * (1 + Math.sign(component2.unitExponent));
+            return exp1 - exp2;
+        });
+        resortedFilteredComponents.forEach((component) => {
+            if (remainingFactor !== 1 && component.unitExponent >= 2) {
+                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+                const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
+                const totalComponentPrefixExponent: number = remainingExponent + (component.prefix?.exponent ?? 0) * component.unitExponent;
+                // The first term, we fit with as much exponent as we can get.
+                const component1UnitExponent: number = component.unitExponent - 1;
+                const component1Prefix: Prefix | null = UnitParser.findBestPrefixFromExponent(totalComponentPrefixExponent / component1UnitExponent, newPrefixBase);
+                const component1PrefixExponent: number = component1Prefix?.exponent ?? 0;
+                // Then we complement with the second term
+                const component2UnitExponent: number = 1;
+                const component2Prefix: Prefix | null = UnitParser.findBestPrefixFromExponent((totalComponentPrefixExponent - component1PrefixExponent * component1UnitExponent) / component2UnitExponent, newPrefixBase);
+                const component2PrefixExponent: number = component2Prefix?.exponent ?? 0;
+                // If we found a solution with different prefixes, update stuff
+                if (component1PrefixExponent !== component2PrefixExponent) {
+                    remainingFactor *= newPrefixBase ** ((component.prefix?.exponent ?? 0) * component.unitExponent);
+                    component.unitExponent = component1UnitExponent;
+                    component.prefixBase = newPrefixBase;
+                    component.prefix = component1Prefix ?? undefined;
+                    component.prefixExponent = component1PrefixExponent;
+                    remainingFactor /= newPrefixBase ** (component1PrefixExponent * component1UnitExponent);
+                    sortedFilteredComponents.push({
+                        unit: component.unit,
+                        unitExponent: component2UnitExponent,
+                        prefixBase: newPrefixBase,
+                        prefixExponent: component2PrefixExponent,
+                        prefix: component2Prefix ?? undefined
+                    });
+                    remainingFactor /= newPrefixBase ** (component2PrefixExponent * component2UnitExponent);
+                }
+            }
+        });
+        if (remainingFactor === 1) {
+            return sortedFilteredComponents;
+        }
         // Split a unit with 0 exponent into a ratio of units with prefixes to account for the remaining prefactor
         sortedComponents.forEach((component) => {
             if (remainingFactor !== 1 && component.unitExponent === 0) {
@@ -212,9 +252,6 @@ export class CompoundUnit extends AbstractUnit {
                 }
             }
         });
-        if (remainingFactor === 1) {
-            return sortedFilteredComponents;
-        }
         // If we have a remaining factor, that's an error case
         if (remainingFactor !== 1) {
             logger.debug(JSON.stringify(this));
