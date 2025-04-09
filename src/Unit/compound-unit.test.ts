@@ -7,14 +7,14 @@ import { CompoundUnit } from "./compound-unit";
 import { PrefixedUnit } from "./prefixed-unit";
 import { ValueError } from "@/errors";
 
-const prefixM: Prefix = new Prefix('M', 'mega', 10, 6); // eslint-disable-line camelcase
-const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
-const prefixh: Prefix = new Prefix('h', 'hecto', 10, 2); // eslint-disable-line camelcase
-const prefixda: Prefix = new Prefix('da', 'deca', 10, 1); // eslint-disable-line camelcase
-const prefixd: Prefix = new Prefix('d', 'deci', 10, -1); // eslint-disable-line camelcase
-const prefixc: Prefix = new Prefix('c', 'centi', 10, -2); // eslint-disable-line camelcase
-const prefixm: Prefix = new Prefix('m', 'mili', 10, -3); // eslint-disable-line camelcase
-const prefixµ: Prefix = new Prefix('µ', 'micro', 10, -6); // eslint-disable-line camelcase
+const prefixM: Prefix = new Prefix('M', 'mega', 10, 6);
+const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
+const prefixh: Prefix = new Prefix('h', 'hecto', 10, 2);
+const prefixda: Prefix = new Prefix('da', 'deca', 10, 1);
+const prefixd: Prefix = new Prefix('d', 'deci', 10, -1);
+const prefixc: Prefix = new Prefix('c', 'centi', 10, -2);
+const prefixm: Prefix = new Prefix('m', 'mili', 10, -3);
+const prefixµ: Prefix = new Prefix('µ', 'micro', 10, -6);
 
 UnitParser.registerPrefix(prefixM);
 UnitParser.registerPrefix(prefixk);

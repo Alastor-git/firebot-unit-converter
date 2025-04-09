@@ -180,6 +180,7 @@ export class CompoundUnit extends AbstractUnit {
             return sortedFilteredComponents;
         }
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
+        
         // Split a unit with an exponent > 1 into several factors with separate prefixes
         const resortedFilteredComponents = [...sortedFilteredComponents].sort((component1, component2) => {
             const exp1: number = Math.abs(component1.unitExponent) + 0.25 * (1 + Math.sign(component1.unitExponent));
