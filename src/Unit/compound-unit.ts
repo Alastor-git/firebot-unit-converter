@@ -180,7 +180,35 @@ export class CompoundUnit extends AbstractUnit {
             return sortedFilteredComponents;
         }
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
-        
+        sortedFilteredComponents.forEach((component1) => {
+            const newPrefixBase: number = component1.prefixBase !== 1 ? component1.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+            const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(newPrefixBase);
+            const component1OldExponent: number = (component1.prefix?.exponent ?? 0) * component1.unitExponent;
+
+            sortedFilteredComponents.forEach((component2) => {
+                // NOTE: 
+                const component2OldExponent: number = (component2.prefix?.exponent ?? 0) * component2.unitExponent;
+                if (component1 === component2) {
+                    return;
+                }
+                // Can't be a candidate if both units don't have the same prefix base
+                // FIXME: currently, if component1 doesn't have a prefix, it assumes the base is 10. 
+                if (component2.prefixBase !== 1 && component2.prefixBase !== newPrefixBase) {
+                    return;
+                }
+                // Find the next best for component1 using prefix + remainingFactor, see what the prefixDifference is
+                const component1NewPrefix: Prefix | null = UnitParser.findNextPrefixFromExponent((component1OldExponent + remainingExponent) / component1.unitExponent, newPrefixBase);
+                const component1NewPrefixExponent: number = (component1NewPrefix?.exponent ?? 0) * component1.unitExponent;
+                const prefixDifference: number = component1OldExponent - component1NewPrefixExponent;
+                // See if we have a prefix for component2 using prefix - prefixDifference
+                // If so, that's a candidate solution
+            });
+        });
+        // Pick the best candidate solution
+
+        if (remainingFactor === 1) {
+            return sortedFilteredComponents;
+        }
         // Split a unit with an exponent > 1 into several factors with separate prefixes
         const resortedFilteredComponents = [...sortedFilteredComponents].sort((component1, component2) => {
             const exp1: number = Math.abs(component1.unitExponent) + 0.25 * (1 + Math.sign(component1.unitExponent));
