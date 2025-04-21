@@ -18,23 +18,26 @@ type UnitComponent = {
 export class CompoundUnit extends AbstractUnit {
     components: {[unitSymbol: string]: UnitComponent} = {};
 
-    constructor(unit: Unit | PrefixedUnit, unitExponent: number = 1) {
+    constructor(unit: Unit | PrefixedUnit | null, unitExponent: number = 1) {
         super();
 
         this.addFactor(unit, unitExponent);
     }
 
     copy(): CompoundUnit {
-        throw new UnexpectedError(`Unimplemented method`);
+        const newUnit: CompoundUnit = new CompoundUnit(null);
+        newUnit.components = {...this.components};
+        newUnit.updateUnit();
+        return newUnit;
     }
 
-    addFactor(unit: Unit | PrefixedUnit, exponent: number = 1): CompoundUnit {
+    addFactor(unit: Unit | PrefixedUnit | null, exponent: number = 1): CompoundUnit {
         let unitSymbol: string;
         let baseUnit: Unit;
         let prefixBase: number;
         let prefixExponent: number;
         // If exponent is 0, we aren't changing anything
-        if (exponent === 0) {
+        if (exponent === 0 || unit === null) {
             this.updateUnit();
             return this;
         }
@@ -62,7 +65,7 @@ export class CompoundUnit extends AbstractUnit {
             throw new UnitError(`Several components match with unit ${unit}`);
         } else if (matchingSymbols.length === 1) {
             unitSymbol = matchingSymbols[0];
-            if (!this.components[unitSymbol].unit.isEqual(baseUnit)) {
+            if (!this.components[unitSymbol].unit.isDeltaEqual(baseUnit)) {
                 throw new UnitError(`Symbols match for ${unitSymbol} but units do not match.`);
             }
             if (this.components[unitSymbol].prefixBase !== 1 && prefixBase !== 1 && this.components[unitSymbol].prefixBase !== prefixBase) {
@@ -107,6 +110,8 @@ export class CompoundUnit extends AbstractUnit {
             if (firstComponent) {
                 firstComponent = false;
                 this.offset = component.unit.offset;
+            } else { // Set offset to 0 as soon as we reach second component. Not sure that's strictly necessary, but better safe
+                this.offset = 0;
             }
         }
         const prefixedComponents: UnitComponent[] = this.updatePrefix();

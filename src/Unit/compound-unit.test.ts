@@ -138,9 +138,24 @@ test('constructor', () => {
     expect(unitF).toHaveProperty('symbols', ['']);
     expect(() => unitF.preferredUnitSymbol).toThrow(ValueError);
     expect(() => unitF.preferredSymbol).toThrow(ValueError);
+    // Test null unit
+    const unitG: CompoundUnit = new CompoundUnit(null, 1);
+    expect(unitG).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unitG).toHaveProperty('coeff', 1);
+    expect(unitG).toHaveProperty('offset', 0);
+    expect(unitG).toHaveProperty('components', {});
+    expect(unitG).toHaveProperty('name', '');
+    expect(unitG).toHaveProperty('symbols', ['']);
+    expect(() => unitG.preferredUnitSymbol).toThrow(ValueError);
+    expect(() => unitG.preferredSymbol).toThrow(ValueError);
 });
 
 test('addFactor', () => {
+    // Add null unit
+    const unit0: CompoundUnit = new CompoundUnit(unitm);
+    expect(unit0.addFactor(null)).toMatchObject(unit0);
+    // Add exponent 0 unit
+    expect(unit0.addFactor(unitL, 0)).toMatchObject(unit0);
     // Dissimilar units preserve prefixes: mm * kg = mm * kg
     const unitmm: PrefixedUnit = new PrefixedUnit(prefixm, unitm);
     const unitkg: PrefixedUnit = new PrefixedUnit(prefixk, unitg);
@@ -189,11 +204,11 @@ test('addFactor', () => {
     // Same unit combine asymetrical prefixes: µm * hm = cm^2
     const unitµm: PrefixedUnit = new PrefixedUnit(prefixµ, unitm);
     const unithm: PrefixedUnit = new PrefixedUnit(prefixh, unitm);
-    const unitC: CompoundUnit = new CompoundUnit(unitµm).addFactor(unithm);
-    expect(unitC).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
-    expect(unitC.coeff).toBeCloseTo(1e-4);// Due to float error
-    expect(unitC).toHaveProperty('offset', 0);
-    expect(unitC).toHaveProperty('components',
+    const unittC: CompoundUnit = new CompoundUnit(unitµm).addFactor(unithm);
+    expect(unittC).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittC.coeff).toBeCloseTo(1e-4);// Due to float error
+    expect(unittC).toHaveProperty('offset', 0);
+    expect(unittC).toHaveProperty('components',
         {
             'm': {
                 unit: unitm,
@@ -202,10 +217,10 @@ test('addFactor', () => {
                 prefixExponent: -4
             }
         });
-    expect(unitC).toHaveProperty('name', 'centimeter^2');
-    expect(unitC).toHaveProperty('symbols', ['cm^2']);
-    expect(unitC.preferredUnitSymbol).toBe('cm^2');
-    expect(unitC.preferredSymbol).toBe('cm^2');
+    expect(unittC).toHaveProperty('name', 'centimeter^2');
+    expect(unittC).toHaveProperty('symbols', ['cm^2']);
+    expect(unittC.preferredUnitSymbol).toBe('cm^2');
+    expect(unittC.preferredSymbol).toBe('cm^2');
     // Report prefixes on other unit that didn't have a prefix: L * mg / dg = cL
     const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
     const unitdg: PrefixedUnit = new PrefixedUnit(prefixd, unitg);
@@ -384,16 +399,16 @@ test('addFactor', () => {
     expect(unitJ).toHaveProperty('symbols', ['Mg*dag^-1']);
     expect(unitJ.preferredUnitSymbol).toBe('Mg*dag^-1');
     expect(unitJ.preferredSymbol).toBe('Mg*dag^-1');
+    // Add factors involving offsets
+    const unitK: CompoundUnit = new CompoundUnit(unitC, 1);
+    expect(unitK.offset).toBe(unitC.offset);
+    expect(unitK.addFactor(unitC, 1).offset).toBe(0);
+    expect(unitK.addFactor(unitg, 1).offset).toBe(0);
 });
 
-// logger.debug(JSON.stringify(unitD));
-// Done: mm * kg = mm * kg : Preserves the prefixes
-// Done: mm * km = m^2 : That one's easy, things cancel out
-// Done: µm * hm = cm^2 : First problem, we end up with prefixes that weren't there in the first place
-// Done: L * mg / dg = cL : Second problem, prefixes are moving from one unit to another.
-// Done: Mm * mL * cg/g = dm * L : We have to downgrade something and upgrade something
-// Done: Mm^2 * mL * cg/g = km^2 * daL
-// Done: dam hg * dm / mg mL = km^2 / cL : Add these two issues, we can end up with using none of the initial prefixes being pretty much the only solution, with the total prefix factor having to be spread across several units.
-// Done: Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
-// Done: cg / g = 0.01: We don't have a choice but to keep a ratio of units
-// Done: Mg / dg = 1e5: We don't have a choice but to keep a ratio of units
+test('copy', () => {
+    const unitA: CompoundUnit = new CompoundUnit(unitg, 1);
+    expect(unitA.copy()).toMatchObject(unitA);
+    expect(unitA.copy().addFactor(unitg, 1)).not.toMatchObject(unitA);
+    expect(unitA.copy().addFactor(unitL, 1)).not.toMatchObject(unitA);
+});
