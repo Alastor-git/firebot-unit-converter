@@ -5,7 +5,8 @@ import { Prefix } from "./prefix";
 import { Unit } from "./unit";
 import { CompoundUnit } from "./compound-unit";
 import { PrefixedUnit } from "./prefixed-unit";
-import { ValueError } from "@/errors";
+import { PrefixError, UnitError, ValueError } from "@/errors";
+import { compileFunction } from "vm";
 
 const prefixM: Prefix = new Prefix('M', 'mega', 10, 6);
 const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
@@ -29,6 +30,7 @@ const unitL: Unit = new Unit('L', 'Liter', { L: 3 }, 1e-3);
 const unitm: Unit = new Unit('m', 'meter', { L: 1 });
 const unitg: Unit = new Unit('g', 'gram', { M: 1 }, 1e-3);
 const unitC: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 1, 273.15);
+const unitin: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 2.54e-2);
 /* Strictly speaking, I don't think we need to register the units for this
 UnitParser.registerUnit(unitL);
 UnitParser.registerUnit(unitm);
@@ -404,6 +406,32 @@ test('addFactor', () => {
     expect(unitK.offset).toBe(unitC.offset);
     expect(unitK.addFactor(unitC, 1).offset).toBe(0);
     expect(unitK.addFactor(unitg, 1).offset).toBe(0);
+
+    // Test error cases
+    // Unit added matches two separate factors
+    const unittL: CompoundUnit = new CompoundUnit(null);
+    unittL.components['in'] = {
+            unit: unitin,
+            unitExponent: 1,
+            prefixBase: 1,
+            prefixExponent: 0
+    };
+    unittL.components["''"] = {
+            unit: unitin,
+            unitExponent: 1,
+            prefixBase: 1,
+            prefixExponent: 0
+    };
+    expect(() => unittL.addFactor(unitin, 1)).toThrow(UnitError);
+    // We add two components that share the same symbol
+    const unittM: CompoundUnit = new CompoundUnit(unitm);
+    const unitFakem: Unit = new Unit('m', 'fake meter', { M: 1 });
+    expect(() => unittM.addFactor(unitFakem, 1)).toThrow(UnitError);
+
+    // Add a factor with a prefix that has a different base than existing one
+    const unittN: CompoundUnit = new CompoundUnit(new PrefixedUnit(prefixh, unitm), 1);
+    const prefixMi: Prefix = new Prefix('Mi', 'Mébi', 2, 20);
+    expect(() => unittN.addFactor(new PrefixedUnit(prefixMi, unitm), 1)).toThrow(PrefixError);
 });
 
 test('copy', () => {

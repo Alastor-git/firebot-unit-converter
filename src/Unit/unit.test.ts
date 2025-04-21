@@ -50,6 +50,18 @@ test("Constructor", () => {
     expect(testObject).toHaveProperty('offset', 9);
 });
 
+test('copy', () => {
+    const testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 8, 9);
+    const testObjectCopy = testObject.copy();
+    expect(testObjectCopy).toMatchObject(testObject);
+    testObjectCopy.dimensions.L += 1;
+    expect(testObjectCopy).not.toMatchObject(testObject);
+    testObjectCopy.dimensions.L -= 1;
+    expect(testObjectCopy).toMatchObject(testObject);
+    testObjectCopy.coeff += 1;
+    expect(testObjectCopy).not.toMatchObject(testObject);
+});
+
 test('preferredUnitSymbol', () => {
     const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
     const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);

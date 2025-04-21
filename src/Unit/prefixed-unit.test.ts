@@ -48,6 +48,14 @@ test('constructor', () => {
     expect(prefixedUnitB.coeff).toBe(prefix_k.factor * unitA.coeff);
 });
 
+test('copy', () => {
+    const testObject: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
+    const testObjectCopy: PrefixedUnit = testObject.copy();
+    expect(testObjectCopy).toMatchObject(testObject);
+    testObjectCopy.prefix = prefix_m;
+    expect(testObjectCopy).not.toMatchObject(testObject);
+});
+
 test('preferredUnitSymbol', () => {
     const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
     const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
