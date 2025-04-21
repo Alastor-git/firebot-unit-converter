@@ -439,4 +439,42 @@ test('copy', () => {
     expect(unitA.copy()).toMatchObject(unitA);
     expect(unitA.copy().addFactor(unitg, 1)).not.toMatchObject(unitA);
     expect(unitA.copy().addFactor(unitL, 1)).not.toMatchObject(unitA);
+    // Check that components are copies. We want a deep copy rather than a shallow one.
+    const unitACopy: CompoundUnit = unitA.copy();
+    unitACopy.components['g'].unit = unitm;
+    expect(unitACopy).not.toMatchObject(unitA);
+});
+
+test('deltaUnit', () => {
+    const unitdC: PrefixedUnit = new PrefixedUnit(prefixd, unitC);
+    const unitdaC: PrefixedUnit = new PrefixedUnit(prefixda, unitC);
+    const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
+    const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
+    const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
+    const deltaUnitdC: PrefixedUnit = unitdC.deltaUnit();
+    const deltaUnitdaC: PrefixedUnit = unitdaC.deltaUnit();
+    const deltaUnitmg: PrefixedUnit = unitmg.deltaUnit();
+    const deltaUnithg: PrefixedUnit = unithg.deltaUnit();
+    const deltaUnitmL: PrefixedUnit = unitmL.deltaUnit();
+    // In this situation, the deltaUnit should match, but the base unit should be a delta to begin with
+    const testObject: CompoundUnit = new CompoundUnit(unitdaC)
+    .addFactor(unithg)
+    .addFactor(unitdC)
+    .addFactor(unitmg, -1)
+    .addFactor(unitmL, -1);
+    const expectedDeltaObject: CompoundUnit = new CompoundUnit(deltaUnitdaC)
+    .addFactor(deltaUnithg)
+    .addFactor(deltaUnitdC)
+    .addFactor(deltaUnitmg, -1)
+    .addFactor(deltaUnitmL, -1);
+    const deltaObject: CompoundUnit = testObject.deltaUnit();
+    expect(deltaObject).toMatchObject(expectedDeltaObject);
+    expect(deltaObject).toMatchObject(testObject);
+    // Test a situation where all units aren't delta units already
+    const testObject2: CompoundUnit = new CompoundUnit(unitdaC);
+    const expectedDeltaObject2: CompoundUnit = new CompoundUnit(deltaUnitdaC);
+    const deltaObject2: CompoundUnit = testObject2.deltaUnit();
+    expect(deltaObject2).not.toMatchObject(testObject2);
+    expect(deltaObject2).toMatchObject(expectedDeltaObject2);
+    expect(expectedDeltaObject2).not.toMatchObject(testObject2);
 });

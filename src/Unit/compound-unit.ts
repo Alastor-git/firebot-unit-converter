@@ -209,7 +209,7 @@ export class CompoundUnit extends AbstractUnit {
                     return;
                 }
                 // Can't be a candidate if both units don't have the same prefix base
-                // FIXME: currently, if component1 doesn't have a prefix, it assumes the base is 10. 
+                // FIXME: currently, if component1 doesn't have a prefix, it assumes the base is 10.
                 if (component2.prefixBase !== 1 && component2.prefixBase !== newPrefixBase) {
                     return;
                 }
@@ -379,7 +379,12 @@ export class CompoundUnit extends AbstractUnit {
     }
 
     deltaUnit(): CompoundUnit {
-        throw new UnexpectedError(`Unimplemented method`);
+        const newUnit: CompoundUnit = this.copy();
+        Object.values(newUnit.components).forEach((element) => {
+            element.unit = element.unit.deltaUnit();
+        });
+        newUnit.updateUnit();
+        return newUnit;
     }
 
     multiply(other: AbstractUnit): CompoundUnit;
