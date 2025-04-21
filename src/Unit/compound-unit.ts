@@ -180,13 +180,25 @@ export class CompoundUnit extends AbstractUnit {
             return sortedFilteredComponents;
         }
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
+        const componentSolutions: {
+            component1: UnitComponent;
+            component1NewPrefix: Prefix;
+            component1NewPrefixExponent: number;
+            component2: UnitComponent;
+            component2NewPrefix: Prefix | null;
+            component2NewPrefixExponent: number;
+            newPrefixBase: number;
+            exponentDifference: number;
+        }[] = [];
         sortedFilteredComponents.forEach((component1) => {
             const newPrefixBase: number = component1.prefixBase !== 1 ? component1.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
             const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(newPrefixBase);
             const component1OldExponent: number = (component1.prefix?.exponent ?? 0) * component1.unitExponent;
 
             sortedFilteredComponents.forEach((component2) => {
-                // NOTE: 
+                // NOTE: Do we need to test only a single upgrade ot every possible upgrade?
+                // More computationally efficient to test a signle upgrade but is it enough?
+                // I think it's enough. Not 100% sure though.
                 const component2OldExponent: number = (component2.prefix?.exponent ?? 0) * component2.unitExponent;
                 if (component1 === component2) {
                     return;
@@ -199,13 +211,45 @@ export class CompoundUnit extends AbstractUnit {
                 // Find the next best for component1 using prefix + remainingFactor, see what the prefixDifference is
                 const component1NewPrefix: Prefix | null = UnitParser.findNextPrefixFromExponent((component1OldExponent + remainingExponent) / component1.unitExponent, newPrefixBase);
                 const component1NewPrefixExponent: number = (component1NewPrefix?.exponent ?? 0) * component1.unitExponent;
-                const prefixDifference: number = component1OldExponent - component1NewPrefixExponent;
-                // See if we have a prefix for component2 using prefix - prefixDifference
+                const exponentDifference: number = component1NewPrefixExponent - component1OldExponent - remainingExponent;
+                // See if we have a prefix for component2 using prefix - exponentDifference
+                // component1NewPrefixExponent = component1OldExponent + remainingExponent + exponentDifference
+                // component2NewPrefixExponent = component2OldExponent - exponentDifference
+                const component2NewPrefix: Prefix | null = UnitParser.findPrefixFromExponent((component2OldExponent - exponentDifference) / component2.unitExponent, newPrefixBase);
                 // If so, that's a candidate solution
+                // There's a corner case if the resulting prefix is no prefix that we need to handle here
+                if (component1NewPrefix !== null && (component2NewPrefix !== null || component2OldExponent === exponentDifference)) {
+                    componentSolutions.push({
+                        component1: component1,
+                        component1NewPrefix: component1NewPrefix,
+                        component1NewPrefixExponent: component1NewPrefixExponent,
+                        component2: component2,
+                        component2NewPrefix: component2NewPrefix,
+                        component2NewPrefixExponent: (component2NewPrefix?.exponent ?? 0) * component2.unitExponent,
+                        newPrefixBase: newPrefixBase,
+                        exponentDifference: exponentDifference
+                    });
+                }
             });
         });
         // Pick the best candidate solution
-
+        // Criteria for best candidate:
+        // - MUST catch up the remainingExponent (should we allow partial catch up ?)
+        // - SHOULD minimize exponentDifference (minimum backchange required)
+        // - ???
+        // Sort best to worst
+        const sortedCandidates = componentSolutions.sort((candidate1, candidate2) => Math.abs(candidate1.exponentDifference) - Math.abs(candidate2.exponentDifference));
+        if (sortedCandidates.length > 0) {
+            const solution = sortedCandidates[0];
+            remainingFactor *= solution.component1.prefixBase ** ((solution.component1?.prefix?.exponent ?? 0) * solution.component1.unitExponent);
+            remainingFactor *= solution.component2.prefixBase ** ((solution.component2?.prefix?.exponent ?? 0) * solution.component2.unitExponent);
+            solution.component1.prefix = solution.component1NewPrefix;
+            solution.component1.prefixBase = solution.newPrefixBase;
+            solution.component2.prefix = solution.component2NewPrefix ?? undefined;
+            solution.component2.prefixBase = solution.component2NewPrefix ? solution.newPrefixBase : 1;
+            remainingFactor /= solution.component1.prefixBase ** ((solution.component1?.prefix?.exponent ?? 0) * solution.component1.unitExponent);
+            remainingFactor /= solution.component2.prefixBase ** ((solution.component2?.prefix?.exponent ?? 0) * solution.component2.unitExponent);
+        }
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }

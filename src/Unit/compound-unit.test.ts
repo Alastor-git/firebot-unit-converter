@@ -218,7 +218,7 @@ test('addFactor', () => {
             'L': {
                 unit: unitL,
                 unitExponent: 1,
-                prefixBase: 1,// TODO: Should probably be set to 10 by knowing the unit base
+                prefixBase: 1, // TODO: Should probably be set to 10 by knowing the unit base
                 prefixExponent: 0
             },
             'g': {
@@ -232,16 +232,78 @@ test('addFactor', () => {
     expect(unitD).toHaveProperty('symbols', ['cL']);
     expect(unitD.preferredUnitSymbol).toBe('cL');
     expect(unitD.preferredSymbol).toBe('cL');
-    // Balance pairs of prefixes: dam hg * dm / mg mL = km^2 / cL
-    /*const unitdam: PrefixedUnit = new PrefixedUnit(prefixda, unitm);
-    const unitdm: PrefixedUnit = new PrefixedUnit(prefixd, unitm);
-    const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
+    // Downgrade a prefix and upgrade another : Mm * mL * cg/g = km * cL
+    const unitMm: PrefixedUnit = new PrefixedUnit(prefixM, unitm);
     const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
-    const unitE: CompoundUnit = new CompoundUnit(unitdam).addFactor(unithg).addFactor(unitdm).addFactor(unitmg, -1).addFactor(unitmL, -1);
-    expect(unitE).toHaveProperty('dimensions', { L: -1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
-    expect(unitE.coeff).toBeCloseTo(1e11);// Due to float errors
+    const unitcg: PrefixedUnit = new PrefixedUnit(prefixc, unitg);
+    const unitE: CompoundUnit = new CompoundUnit(unitMm).addFactor(unitmL).addFactor(unitcg).addFactor(unitg, -1);
+    expect(unitE).toHaveProperty('dimensions', { L: 4, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unitE.coeff).toBeCloseTo(1e-2);// Due to float errors
     expect(unitE).toHaveProperty('offset', 0);
     expect(unitE).toHaveProperty('components',
+        {
+            'm': {
+                unit: unitm,
+                unitExponent: 1,
+                prefixBase: 10,
+                prefixExponent: 6
+            },
+            'L': {
+                unit: unitL,
+                unitExponent: 1,
+                prefixBase: 10,
+                prefixExponent: -3
+            },
+            'g': {
+                unit: unitg,
+                unitExponent: 0,
+                prefixBase: 10,
+                prefixExponent: -2
+            }
+        });
+    expect(unitE).toHaveProperty('name', 'kilometer*centiLiter');
+    expect(unitE).toHaveProperty('symbols', ['km*cL']);
+    expect(unitE.preferredUnitSymbol).toBe('km*cL');
+    expect(unitE.preferredSymbol).toBe('km*cL');
+    // Downgrade a prefix and upgrade another on a unit with exponent : Mm^2 * mL * cg/g = km^2 * daL
+    const unitF: CompoundUnit = new CompoundUnit(unitMm, 2).addFactor(unitmL).addFactor(unitcg).addFactor(unitg, -1);
+    expect(unitF).toHaveProperty('dimensions', { L: 5, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unitF.coeff).toBeCloseTo(1e4);// Due to float errors
+    expect(unitF).toHaveProperty('offset', 0);
+    expect(unitF).toHaveProperty('components',
+        {
+            'm': {
+                unit: unitm,
+                unitExponent: 2,
+                prefixBase: 10,
+                prefixExponent: 12
+            },
+            'L': {
+                unit: unitL,
+                unitExponent: 1,
+                prefixBase: 10,
+                prefixExponent: -3
+            },
+            'g': {
+                unit: unitg,
+                unitExponent: 0,
+                prefixBase: 10,
+                prefixExponent: -2
+            }
+        });
+    expect(unitF).toHaveProperty('name', 'kilometer^2*decaLiter');
+    expect(unitF).toHaveProperty('symbols', ['km^2*daL']);
+    expect(unitF.preferredUnitSymbol).toBe('km^2*daL');
+    expect(unitF.preferredSymbol).toBe('km^2*daL');
+    // Balance pairs of prefixes: dam hg * dm / mg mL = km^2 / cL
+    const unitdm: PrefixedUnit = new PrefixedUnit(prefixd, unitm);
+    const unitdam: PrefixedUnit = new PrefixedUnit(prefixda, unitm);
+    const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
+    const unitG: CompoundUnit = new CompoundUnit(unitdam).addFactor(unithg).addFactor(unitdm).addFactor(unitmg, -1).addFactor(unitmL, -1);
+    expect(unitG).toHaveProperty('dimensions', { L: -1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unitG.coeff).toBeCloseTo(1e11);// Due to float errors
+    expect(unitG).toHaveProperty('offset', 0);
+    expect(unitG).toHaveProperty('components',
         {
             'm': {
                 unit: unitm,
@@ -257,171 +319,16 @@ test('addFactor', () => {
             },
             'L': {
                 unit: unitL,
-                unitExponent: 1,
+                unitExponent: -1,
                 prefixBase: 10,
                 prefixExponent: 3
             }
         });
-    expect(unitE).toHaveProperty('name', 'kilometer^2*centiLiter^-1');
-    expect(unitE).toHaveProperty('symbols', ['km^2*cL^-1']);
-    expect(unitE.preferredUnitSymbol).toBe('km^2*cL^-1');
-    expect(unitE.preferredSymbol).toBe('km^2*cL^-1');*/
-    /*
-    const unitE: CompoundUnit = new CompoundUnit(unitdam).addFactor(unithg).addFactor(unitdm).addFactor(unitmg, -1).addFactor(unitmL, -1)
-    this: {
-        "symbols":["m^2*hg"],
-        "name":"meter^2*hectogram",
-        "_preferredUnitSymbol":"m^2*hg",
-        "coeff":100000,
-        "offset":0,
-        "dimensions":{"L":2,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0},
-        "components":{
-            "m":{
-                "unit":{
-                    "symbols":["m"],
-                    "name":"meter",
-                    "_preferredUnitSymbol":"m",
-                    "coeff":1,
-                    "offset":0,
-                    "dimensions":{"L":1,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-                },
-                "unitExponent":2,
-                "prefixBase":10,
-                "prefixExponent":0
-            },
-            "g":{
-                "unit":{
-                    "symbols":["g"],
-                    "name":"gram",
-                    "_preferredUnitSymbol":"g",
-                    "coeff":0.001,
-                    "offset":0,
-                    "dimensions":{"L":0,"M":1,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-                },
-                "unitExponent":0,
-                "prefixBase":10,
-                "prefixExponent":5
-            }
-        }
-    }
-    sortedComponents: [
-        {
-            "unit":{
-                "symbols":["m"],
-                "name":"meter",
-                "_preferredUnitSymbol":"m",
-                "coeff":1,
-                "offset":0,
-                "dimensions":{"L":1,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-            },
-            "unitExponent":2,
-            "prefixBase":10,
-            "prefixExponent":0,
-            "prefix":{
-                "symbol":"h",
-                "name":"hecto",
-                "factor":100,
-                "_base":10,
-                "_exponent":2
-            }
-        }
-    ]
-
-    const unitE: CompoundUnit = new CompoundUnit(unitdam).addFactor(unithg).addFactor(unitdm).addFactor(unitmL, -1).addFactor(unitmg, -1)
-    this: {
-        "symbols":["m^2*hg*mL^-1"],
-        "name":"meter^2*hectogram*miliLiter^-1",
-        "_preferredUnitSymbol":"m^2*hg*mL^-1",
-        "coeff":100000000000,
-        "offset":0,
-        "dimensions":{"L":-1,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0},
-        "components":{
-            "m":{
-                "unit":{
-                    "symbols":["m"],
-                    "name":"meter",
-                    "_preferredUnitSymbol":"m",
-                    "coeff":1,
-                    "offset":0,
-                    "dimensions":{"L":1,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-                },
-                "unitExponent":2,
-                "prefixBase":10,
-                "prefixExponent":0
-            },
-            "g":{
-                "unit":{
-                    "symbols":["g"],
-                    "name":"gram",
-                    "_preferredUnitSymbol":"g",
-                    "coeff":0.001,
-                    "offset":0,
-                    "dimensions":{"L":0,"M":1,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-                },
-                "unitExponent":0,
-                "prefixBase":10,
-                "prefixExponent":5
-            },
-            "L":{
-                "unit":{
-                    "symbols":["L"],
-                    "name":"Liter",
-                    "_preferredUnitSymbol":"L",
-                    "coeff":0.001,
-                    "offset":0,
-                    "dimensions":{"L":3,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-                },
-                "unitExponent":-1,
-                "prefixBase":10,
-                "prefixExponent":3
-            }
-        }
-    }
-    sortedComponents: [
-        {
-            "unit":{
-                "symbols":["m"],
-                "name":"meter",
-                "_preferredUnitSymbol":"m",
-                "coeff":1,
-                "offset":0,
-                "dimensions":{"L":1,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-            },
-            "unitExponent":2,
-            "prefixBase":10,
-            "prefixExponent":0,
-            "prefix":{
-                "symbol":"h",
-                "name":"hecto",
-                "factor":100,
-                "_base":10,
-                "_exponent":2
-            }
-        },{
-            "unit":{
-                "symbols":["L"],
-                "name":"Liter",
-                "_preferredUnitSymbol":"L",
-                "coeff":0.001,
-                "offset":0,
-                "dimensions":{"L":3,"M":0,"T":0,"I":0,"THETA":0,"N":0,"J":0}
-            },
-            "unitExponent":-1,
-            "prefixBase":10,
-            "prefixExponent":3,
-            "prefix":{
-                "symbol":"m",
-                "name":"mili",
-                "factor":0.001,
-                "_base":10,
-                "_exponent":-3
-            }
-        }
-    ]
-     */
+    expect(unitG).toHaveProperty('name', 'kilometer^2*centiLiter^-1');
+    expect(unitG).toHaveProperty('symbols', ['km^2*cL^-1']);
+    expect(unitG.preferredUnitSymbol).toBe('km^2*cL^-1');
+    expect(unitG.preferredSymbol).toBe('km^2*cL^-1');
     // Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
-    const unitMm: PrefixedUnit = new PrefixedUnit(prefixM, unitm);
-    const unitdam: PrefixedUnit = new PrefixedUnit(prefixda, unitm);
     const unitH: CompoundUnit = new CompoundUnit(unitMm).addFactor(unitdam);
     expect(unitH).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
     expect(unitH.coeff).toBeCloseTo(1e7);// Due to float errors
@@ -440,7 +347,6 @@ test('addFactor', () => {
     expect(unitH.preferredUnitSymbol).toBe('Mm*dam');
     expect(unitH.preferredSymbol).toBe('Mm*dam');
     // cg / g = 0.01: We don't have a choice but to keep a ratio of units
-    const unitcg: PrefixedUnit = new PrefixedUnit(prefixc, unitg);
     const unitI: CompoundUnit = new CompoundUnit(unitcg).addFactor(unitg, -1);
     expect(unitI).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
     expect(unitI.coeff).toBeCloseTo(1e-2);// Due to float errors
@@ -485,9 +391,9 @@ test('addFactor', () => {
 // Done: mm * km = m^2 : That one's easy, things cancel out
 // Done: µm * hm = cm^2 : First problem, we end up with prefixes that weren't there in the first place
 // Done: L * mg / dg = cL : Second problem, prefixes are moving from one unit to another.
-// Todo: Mm * mL * cg/g = dm * L : We have to downgrade something and upgrade something
-// Todo: Mm^2 * mL * cg/g = km^2 * daL
-// TODO: dam hg * dm / mg mL = km^2 / cL : Add these two issues, we can end up with using none of the initial prefixes being pretty much the only solution, with the total prefix factor having to be spread across several units.
+// Done: Mm * mL * cg/g = dm * L : We have to downgrade something and upgrade something
+// Done: Mm^2 * mL * cg/g = km^2 * daL
+// Done: dam hg * dm / mg mL = km^2 / cL : Add these two issues, we can end up with using none of the initial prefixes being pretty much the only solution, with the total prefix factor having to be spread across several units.
 // Done: Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
 // Done: cg / g = 0.01: We don't have a choice but to keep a ratio of units
 // Done: Mg / dg = 1e5: We don't have a choice but to keep a ratio of units
