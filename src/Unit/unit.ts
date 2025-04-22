@@ -2,6 +2,7 @@ import { Prefix } from "./prefix";
 import { Quantity } from "../quantity";
 import { PrefixedUnit } from "./prefixed-unit";
 import { AbstractUnit, UnitDimensions } from "./abstract-unit";
+import { CompoundUnit } from "./compound-unit";
 
 export class Unit extends AbstractUnit {
     symbols: string[];
@@ -58,70 +59,28 @@ export class Unit extends AbstractUnit {
         return new Unit(this.symbols, this.name, this.dimensions, this.coeff);
     }
 
-    multiply(other: AbstractUnit): Unit;
     multiply(other: number): Quantity;
-    multiply(other: AbstractUnit | number): Unit | Quantity;
-    multiply(other: AbstractUnit | number): Unit | Quantity {
+    multiply(other: AbstractUnit): CompoundUnit;
+    multiply(other: AbstractUnit | number): CompoundUnit | Quantity;
+    multiply(other: AbstractUnit | number): CompoundUnit | Quantity {
         if (typeof other === 'number') {
             return new Quantity(other, this);
         }
-        return new Unit(
-            this.symbols.map(symA => other.symbols.map(symB => `${symA}*${symB}`)).flat(),
-            `${this.name}*${other.name}`,
-            {
-                L: this.dimensions.L + other.dimensions.L,
-                M: this.dimensions.M + other.dimensions.M,
-                T: this.dimensions.T + other.dimensions.T,
-                I: this.dimensions.I + other.dimensions.I,
-                THETA: this.dimensions.THETA + other.dimensions.THETA,
-                N: this.dimensions.N + other.dimensions.N,
-                J: this.dimensions.J + other.dimensions.J
-            },
-            this.coeff * other.coeff
-            // No offset when multiplying units. We assume these are only delta quantities.
-            );
+        return new CompoundUnit(this, 1).multiply(other);
     }
 
     divide(other: number): Quantity;
-    divide(other: AbstractUnit): Unit;
-    divide(other: AbstractUnit | number): Unit | Quantity;
-    divide(other: AbstractUnit | number): Unit | Quantity {
+    divide(other: AbstractUnit): CompoundUnit;
+    divide(other: AbstractUnit | number): CompoundUnit | Quantity;
+    divide(other: AbstractUnit | number): CompoundUnit | Quantity {
         if (typeof other === 'number') {
             return new Quantity(1 / other, this);
         }
-        return new Unit(
-            this.symbols.map(symA => other.symbols.map(symB => `(${symA})/(${symB})`)).flat(),
-            `(${this.name})/(${other.name})`,
-            {
-                L: this.dimensions.L - other.dimensions.L,
-                M: this.dimensions.M - other.dimensions.M,
-                T: this.dimensions.T - other.dimensions.T,
-                I: this.dimensions.I - other.dimensions.I,
-                THETA: this.dimensions.THETA - other.dimensions.THETA,
-                N: this.dimensions.N - other.dimensions.N,
-                J: this.dimensions.J - other.dimensions.J
-            },
-            this.coeff / other.coeff
-            // No offset when dividing units. We assume these are only delta quantities.
-            );
+        return new CompoundUnit(this, 1).divide(other);
     }
 
-    power(power: number): Unit {
-        return new Unit(
-            this.symbols.map(symA => `${symA}^(${power})`),
-            `(${this.name})^(${power})`,
-                {
-                    L: this.dimensions.L * power,
-                    M: this.dimensions.M * power,
-                    T: this.dimensions.T * power,
-                    I: this.dimensions.I * power,
-                    THETA: this.dimensions.THETA * power,
-                    N: this.dimensions.N * power,
-                    J: this.dimensions.J * power
-                },
-            this.coeff ** power
-            // No offset when taking powers of units. We assume these are only delta quantities.
-            );
+    power(power: number): CompoundUnit {
+        return new CompoundUnit(this, power);
     }
 
     applyPrefix(prefix: Prefix, unitSymbol?: string): PrefixedUnit {
