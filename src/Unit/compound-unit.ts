@@ -189,6 +189,8 @@ export class CompoundUnit extends AbstractUnit {
             }
             return true;
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         // See if we find the exact prefix for the remaining units
         sortedFilteredComponents.forEach((component) => {
             const currentPrefixExponent: number = component.prefixExponent;
@@ -201,6 +203,8 @@ export class CompoundUnit extends AbstractUnit {
                 remainingFactor *= component.prefixBase ** component.prefixExponent;
             }
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }
@@ -215,6 +219,8 @@ export class CompoundUnit extends AbstractUnit {
                 }
             }
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }
@@ -239,6 +245,8 @@ export class CompoundUnit extends AbstractUnit {
                 }
             }
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }
@@ -313,6 +321,8 @@ export class CompoundUnit extends AbstractUnit {
             remainingFactor /= solution.component1.prefixBase ** ((solution.component1?.prefix?.exponent ?? 0) * solution.component1.unitExponent);
             remainingFactor /= solution.component2.prefixBase ** ((solution.component2?.prefix?.exponent ?? 0) * solution.component2.unitExponent);
         }
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }
@@ -354,6 +364,8 @@ export class CompoundUnit extends AbstractUnit {
                 }
             }
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
             return sortedFilteredComponents;
         }
@@ -388,6 +400,8 @@ export class CompoundUnit extends AbstractUnit {
                 }
             }
         });
+        // Round the remainingFactor to avoid precision loss
+        remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         // If we have a remaining factor, that's an error case
         if (remainingFactor !== 1) {
             logger.debug(JSON.stringify(this));
@@ -466,8 +480,19 @@ export class CompoundUnit extends AbstractUnit {
     divide(other: AbstractUnit): CompoundUnit;
     divide(other: number): Quantity;
     divide(other: AbstractUnit | number): CompoundUnit | Quantity;
-    divide(other: unknown): CompoundUnit | Quantity {
-        throw new UnexpectedError(`Unimplemented method`);
+    divide(other: AbstractUnit | number): CompoundUnit | Quantity {
+        if (typeof other === 'number') {
+            return new Quantity(1 / other, this);
+        } else if (other instanceof Unit || other instanceof PrefixedUnit) {
+            return this.copy().addFactor(other, -1);
+        } else if (other instanceof CompoundUnit) {
+            const ratio: CompoundUnit = this.copy();
+            Object.values(other.components).forEach((component) => {
+                ratio.addComponent(component, -1);
+            });
+            return ratio;
+        }
+        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit.`);
     }
 
     power(exponent: number): CompoundUnit {

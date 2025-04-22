@@ -615,3 +615,32 @@ test("multiply", () => {
     expect(unittC.multiply(Unit.ONE).isEqual(unittC)).toBe(false);
     expect(unittA.multiply(5).isEqual(quantityA)).toBe(true);
 });
+
+test("divide", () => {
+    const unitdC: PrefixedUnit = new PrefixedUnit(prefixd, unitC);
+    const unitdaC: PrefixedUnit = new PrefixedUnit(prefixda, unitC);
+    const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
+    const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
+    const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
+    const unittA: CompoundUnit = new CompoundUnit(unitdaC)
+        .addFactor(unithg)
+        .addFactor(unitdC);
+    const unittB: CompoundUnit = new CompoundUnit(unitmg)
+        .addFactor(unitmL);
+    const quantityA: Quantity = new Quantity(1 / 5, unittA);
+    const unittAB: CompoundUnit = new CompoundUnit(unitdaC)
+        .addFactor(unithg)
+        .addFactor(unitdC)
+        .addFactor(unitmg, -1)
+        .addFactor(unitmL, -1);
+    const unittC: CompoundUnit = new CompoundUnit(unitdaC);
+
+    expect(unittA.divide(unittB)).toMatchObject(unittAB);
+    expect(unittA.divide(unittB).isEqual(unittAB)).toBe(true);
+    expect(unittB.divide(unittA).isEqual(unittAB)).toBe(false);
+    expect(unittA.divide(Unit.ONE).isDeltaEqual(unittA)).toBe(true);
+    expect(unittA.divide(Unit.ONE).isEqual(unittA)).toBe(true);
+    expect(unittC.divide(Unit.ONE).isDeltaEqual(unittC)).toBe(true);
+    expect(unittC.divide(Unit.ONE).isEqual(unittC)).toBe(false);
+    expect(unittA.divide(5).isEqual(quantityA)).toBe(true);
+});
