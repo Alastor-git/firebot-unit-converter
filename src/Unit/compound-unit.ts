@@ -7,7 +7,7 @@ import { Prefix } from "./prefix";
 import { UnitParser } from "@/unit-parser";
 import { logger } from "@/shared/firebot-modules";
 
-type UnitComponent = {
+export type UnitComponent = {
             unit: Unit,
             unitExponent: number,
             prefixBase: number,
@@ -31,6 +31,7 @@ export class CompoundUnit extends AbstractUnit {
         return newUnit;
     }
 
+    // TODO: Isn't addFactor code now mowtly redundant with addComponent ? Shouldn't it just call addComponent ? 
     addFactor(unit: Unit | PrefixedUnit | null, exponent: number = 1): CompoundUnit {
         let unitSymbol: string;
         let baseUnit: Unit;
@@ -58,7 +59,7 @@ export class CompoundUnit extends AbstractUnit {
         }
         // If this isn't the first component or it is to a power, the unit we add must be a delta unit
         if (componentsKeys.length > 0 || exponent !== 1) {
-            unit = unit.deltaUnit();
+            baseUnit = baseUnit.deltaUnit();
         }
         // If the unit is already part of the compound, add to the component, otherwise add the unit.
         if (matchingSymbols.length > 1) {
@@ -74,8 +75,8 @@ export class CompoundUnit extends AbstractUnit {
             if (prefixBase !== 1) {
                 this.components[unitSymbol].prefixBase = prefixBase;
             }
-            this.components[unitSymbol].unitExponent = this.components[unitSymbol].unitExponent + exponent;
-            this.components[unitSymbol].prefixExponent = this.components[unitSymbol].prefixExponent + prefixExponent * exponent;
+            this.components[unitSymbol].unitExponent += exponent;
+            this.components[unitSymbol].prefixExponent += prefixExponent * exponent;
             // We keep the unit registered as part of the component if the exponent cancels out.
             // Allows to keep prefixCoeff and possibly reapply it to future factors using the same unit
         } else { // No matching symbol
@@ -85,6 +86,56 @@ export class CompoundUnit extends AbstractUnit {
                 unitExponent: exponent,
                 prefixBase: prefixBase,
                 prefixExponent: prefixExponent * exponent
+            };
+        }
+        this.updateUnit();
+        return this;
+    }
+
+    addComponent(component: UnitComponent, exponent: number = 1): CompoundUnit {
+        let unitSymbol: string;
+        let baseUnit: Unit = component.unit;
+        const unitExponent: number = component.unitExponent * exponent;
+        const prefix: Prefix | undefined = component.prefix ?? undefined;
+        const prefixBase: number = component.prefixBase;
+        const prefixExponent: number = component.prefixExponent * exponent;
+
+        const componentsKeys = Object.keys(this.components);
+        const matchingSymbols = componentsKeys.filter(componentSymbol => baseUnit.symbols.includes(componentSymbol));
+        // If there was a single components, we switch the existing component to a delta unit.
+        if (componentsKeys.length === 1) {
+            this.components[componentsKeys[0]].unit = this.components[componentsKeys[0]].unit.deltaUnit();
+        }
+        // If this isn't the first component or it is to a power, the unit we add must be a delta unit
+        if (componentsKeys.length > 0 || unitExponent !== 1) {
+            baseUnit = baseUnit.deltaUnit();
+        }
+        // If the unit is already part of the compound, add to the component, otherwise add the unit.
+        if (matchingSymbols.length > 1) {
+            throw new UnitError(`Several components match with unit ${component}`);
+        } else if (matchingSymbols.length === 1) {
+            unitSymbol = matchingSymbols[0];
+            if (!this.components[unitSymbol].unit.isDeltaEqual(baseUnit)) {
+                throw new UnitError(`Symbols match for ${unitSymbol} but units do not match.`);
+            }
+            if (this.components[unitSymbol].prefixBase !== 1 && prefixBase !== 1 && this.components[unitSymbol].prefixBase !== prefixBase) {
+                throw new PrefixError(`Prefixes for unit ${unitSymbol} don't have the same base.`);
+            }
+            if (prefixBase !== 1) {
+                this.components[unitSymbol].prefixBase = prefixBase;
+            }
+            this.components[unitSymbol].unitExponent += unitExponent;
+            this.components[unitSymbol].prefixExponent += prefixExponent;
+            // We keep the unit registered as part of the component if the exponent cancels out.
+            // Allows to keep prefixCoeff and possibly reapply it to future factors using the same unit
+        } else { // No matching symbol
+            unitSymbol = baseUnit.preferredUnitSymbol;
+            this.components[unitSymbol] = {
+                unit: baseUnit,
+                unitExponent: unitExponent,
+                prefix: prefix,
+                prefixBase: prefixBase,
+                prefixExponent: prefixExponent
             };
         }
         this.updateUnit();
@@ -137,7 +188,9 @@ export class CompoundUnit extends AbstractUnit {
         sortedFilteredComponents.forEach((component) => {
             const currentPrefixExponent: number = component.prefixExponent;
             const prefix: Prefix | null = UnitParser.findPrefixFromExponent(currentPrefixExponent / component.unitExponent, component.prefixBase);
-            if (prefix) {
+            if (currentPrefixExponent === 0) {
+                component.prefix = undefined;
+            } else if (prefix) {
                 component.prefix = prefix;
             } else {
                 remainingFactor *= component.prefixBase ** component.prefixExponent;
@@ -391,7 +444,18 @@ export class CompoundUnit extends AbstractUnit {
     multiply(other: number): Quantity;
     multiply(other: AbstractUnit | number): CompoundUnit | Quantity;
     multiply(other: AbstractUnit | number): CompoundUnit | Quantity {
-        throw new UnexpectedError(`Unimplemented method`);
+        if (typeof other === 'number') {
+            return new Quantity(other, this);
+        } else if (other instanceof Unit || other instanceof PrefixedUnit) {
+            return this.copy().addFactor(other, 1);
+        } else if (other instanceof CompoundUnit) {
+            const product: CompoundUnit = this.copy();
+            Object.values(other.components).forEach((component) => {
+                product.addComponent(component);
+            });
+            return product;
+        }
+        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit.`);
     }
 
     divide(other: AbstractUnit): CompoundUnit;
