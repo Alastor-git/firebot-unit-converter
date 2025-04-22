@@ -64,21 +64,27 @@ export class PrefixedUnit extends AbstractUnit {
         return new PrefixedUnit(this.prefix, this.baseUnit.deltaUnit(), this._preferredUnitSymbol ?? undefined);
     }
 
-    multiply(other: AbstractUnit): CompoundUnit;
     multiply(other: number): Quantity;
+    multiply(other: AbstractUnit): CompoundUnit;
     multiply(other: AbstractUnit | number): CompoundUnit | Quantity;
     multiply(other: AbstractUnit | number): CompoundUnit | Quantity {
-        throw new UnexpectedError(`Unimplemented method`);
+        if (typeof other === 'number') {
+            return new Quantity(other, this);
+        }
+        return new CompoundUnit(this, 1).multiply(other);
     }
 
-    divide(other: AbstractUnit): CompoundUnit;
     divide(other: number): Quantity;
+    divide(other: AbstractUnit): CompoundUnit;
     divide(other: AbstractUnit | number): CompoundUnit | Quantity;
-    divide(other: unknown): CompoundUnit | Quantity {
-        throw new UnexpectedError(`Unimplemented method`);
+    divide(other: AbstractUnit | number): CompoundUnit | Quantity {
+        if (typeof other === 'number') {
+            return new Quantity(1 / other, this);
+        }
+        return new CompoundUnit(this, 1).divide(other);
     }
 
-    power(exponent: number): CompoundUnit {
-        throw new UnexpectedError(`Unimplemented method`);
+    power(power: number): CompoundUnit {
+        return new CompoundUnit(this, power);
     }
 }
