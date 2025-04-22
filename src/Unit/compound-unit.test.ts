@@ -644,3 +644,27 @@ test("divide", () => {
     expect(unittC.divide(Unit.ONE).isEqual(unittC)).toBe(false);
     expect(unittA.divide(5).isEqual(quantityA)).toBe(true);
 });
+
+test("power", () => {
+    const power: number = 3;
+    const unitdC: PrefixedUnit = new PrefixedUnit(prefixd, unitC);
+    const unitdaC: PrefixedUnit = new PrefixedUnit(prefixda, unitC);
+    const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
+    const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
+    const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
+    const unittA: CompoundUnit = new CompoundUnit(unitdaC)
+        .addFactor(unithg)
+        .addFactor(unitdC)
+        .addFactor(unitmg, -1)
+        .addFactor(unitmL, -1);
+    const unittApow: CompoundUnit = new CompoundUnit(unitdaC, power)
+        .addFactor(unithg, power)
+        .addFactor(unitdC, power)
+        .addFactor(unitmg, -power)
+        .addFactor(unitmL, -power);
+
+    expect(unittA.power(power).isEqual(unittApow)).toBe(true);
+    expect(unittA.power(power).isEqual(unittA)).toBe(false);
+    expect(unittA.power(power).power(1 / power).isDeltaEqual(unittA)).toBe(true);
+    expect(unittA.power(0).isEqual(Unit.ONE)).toBe(true);
+});

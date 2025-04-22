@@ -496,6 +496,12 @@ export class CompoundUnit extends AbstractUnit {
     }
 
     power(exponent: number): CompoundUnit {
-        throw new UnexpectedError(`Unimplemented method`);
+        const result: CompoundUnit = this.copy();
+        Object.values(result.components).forEach((component) => {
+            component.unitExponent *= exponent;
+            component.prefixExponent *= exponent;
+        });
+        result.updateUnit();
+        return result;
     }
 }
