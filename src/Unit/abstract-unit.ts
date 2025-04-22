@@ -30,11 +30,11 @@ export abstract class AbstractUnit {
             throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}`);
         }
 
-        this._preferredUnitSymbol = unitSymbol ? unitSymbol : null;
+        this._preferredUnitSymbol = unitSymbol;
     }
 
     get preferredUnitSymbol(): string {
-        if (!this._preferredUnitSymbol) {
+        if (this._preferredUnitSymbol === null) {
             throw new ValueError(`Unit preferred symbol has not been defined.`);
         }
         return this._preferredUnitSymbol;

@@ -26,8 +26,9 @@ export class CompoundUnit extends AbstractUnit {
 
     copy(): CompoundUnit {
         const newUnit: CompoundUnit = new CompoundUnit(null);
-        newUnit.components = {...this.components};
-        newUnit.updateUnit();
+        Object.values(this.components).forEach((component) => {
+            newUnit.addComponent({...component});
+        });
         return newUnit;
     }
 
@@ -172,7 +173,11 @@ export class CompoundUnit extends AbstractUnit {
 
     updatePrefix(): UnitComponent[] {
         let remainingFactor: number = 1;
-        const sortedComponents: UnitComponent[] = Object.values(this.components).map((component) => { // Copy the components to not mutate them
+        const components: {[unitSymbol: string]: UnitComponent} = {...this.components};
+        if ('' in components) {
+            components[''].unitExponent = 0;
+        }
+        const sortedComponents: UnitComponent[] = Object.values(components).map((component) => { // Copy the components to not mutate them
             return {...component};
         }).sort((componentA, componentB) => { // Sort by ascending exponent
             return componentB.unitExponent - componentA.unitExponent;

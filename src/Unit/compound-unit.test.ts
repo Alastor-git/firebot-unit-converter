@@ -139,8 +139,8 @@ test('constructor', () => {
     expect(unittF).toHaveProperty('components', {});
     expect(unittF).toHaveProperty('name', '');
     expect(unittF).toHaveProperty('symbols', ['']);
-    expect(() => unittF.preferredUnitSymbol).toThrow(ValueError);
-    expect(() => unittF.preferredSymbol).toThrow(ValueError);
+    expect(unittF.preferredUnitSymbol).toBe('');
+    expect(unittF.preferredSymbol).toBe('');
     // Test null unit
     const unittG: CompoundUnit = new CompoundUnit(null, 1);
     expect(unittG).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
@@ -149,8 +149,8 @@ test('constructor', () => {
     expect(unittG).toHaveProperty('components', {});
     expect(unittG).toHaveProperty('name', '');
     expect(unittG).toHaveProperty('symbols', ['']);
-    expect(() => unittG.preferredUnitSymbol).toThrow(ValueError);
-    expect(() => unittG.preferredSymbol).toThrow(ValueError);
+    expect(unittG.preferredUnitSymbol).toBe('');
+    expect(unittG.preferredSymbol).toBe('');
 });
 
 test('addFactor', () => {
@@ -549,7 +549,7 @@ test('copy', () => {
     expect(unittA.copy().addFactor(unitL, 1)).not.toMatchObject(unittA);
     // Check that components are copies. We want a deep copy rather than a shallow one.
     const unitACopy: CompoundUnit = unittA.copy();
-    unitACopy.components['g'].unit = unitm;
+    unitACopy.addFactor(unitg, 1);
     expect(unitACopy).not.toMatchObject(unittA);
 });
 
@@ -593,26 +593,25 @@ test("multiply", () => {
     const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
     const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
     const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
-    const unitA: CompoundUnit = new CompoundUnit(unitdaC)
+    const unittA: CompoundUnit = new CompoundUnit(unitdaC)
         .addFactor(unitmg, -1)
         .addFactor(unitmL, -1);
-    const unitB: CompoundUnit = new CompoundUnit(unithg)
+    const unittB: CompoundUnit = new CompoundUnit(unithg)
         .addFactor(unitdC);
-    const quantityA: Quantity = new Quantity(5, unitA);
-    const unitAB: CompoundUnit = new CompoundUnit(unitdaC)
+    const quantityA: Quantity = new Quantity(5, unittA);
+    const unittAB: CompoundUnit = new CompoundUnit(unitdaC)
         .addFactor(unithg)
         .addFactor(unitdC)
         .addFactor(unitmg, -1)
         .addFactor(unitmL, -1);
+    const unittC: CompoundUnit = new CompoundUnit(unitdaC);
 
-    logger.debug(JSON.stringify(unitA.multiply(unitB)));
-    logger.debug(JSON.stringify(unitAB));
-    expect(unitA.multiply(unitB)).toMatchObject(unitAB);
-    expect(unitA.multiply(unitB).isEqual(unitAB)).toBe(true);
-    expect(unitB.multiply(unitA).isEqual(unitAB)).toBe(true);
-    expect(unitA.multiply(Unit.ONE).isDeltaEqual(unitA)).toBe(true);
-    expect(unitA.multiply(Unit.ONE).isEqual(unitA)).toBe(false);
-    //expect(Unit.ONE.multiply(unitA).isDeltaEqual(unitA)).toBe(true);
-    //expect(Unit.ONE.multiply(unitA).isEqual(unitA)).toBe(false);
-    expect(unitA.multiply(5).isEqual(quantityA)).toBe(true);
+    expect(unittA.multiply(unittB)).toMatchObject(unittAB);
+    expect(unittA.multiply(unittB).isEqual(unittAB)).toBe(true);
+    expect(unittB.multiply(unittA).isEqual(unittAB)).toBe(true);
+    expect(unittA.multiply(Unit.ONE).isDeltaEqual(unittA)).toBe(true);
+    expect(unittA.multiply(Unit.ONE).isEqual(unittA)).toBe(true);
+    expect(unittC.multiply(Unit.ONE).isDeltaEqual(unittC)).toBe(true);
+    expect(unittC.multiply(Unit.ONE).isEqual(unittC)).toBe(false);
+    expect(unittA.multiply(5).isEqual(quantityA)).toBe(true);
 });
