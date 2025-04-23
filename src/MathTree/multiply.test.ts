@@ -8,6 +8,7 @@ import { StringSymbol } from './string';
 import { UnitSymbol } from "./unit";
 import { Numeric } from "./numeric";
 import { Multiply } from "./multiply";
+import { CompoundUnit } from "@/Unit/compound-unit";
 
 test('constructor', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
@@ -35,7 +36,7 @@ test('parseUnits', () => {
 /* */
 test('collapsePair', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitB: Unit = unitA.multiply(unitA);
+    const unitB: CompoundUnit = unitA.multiply(unitA);
     const quantityA: Quantity = new Quantity(5, unitA);
     const quantityB: Quantity = new Quantity(-5, unitA);
     const quantityC: Quantity = new Quantity(5, unitB);
@@ -71,7 +72,7 @@ test('collapsePair', () => {
 test('collapse', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
-    const unitB: Unit = unitA.multiply(unitA);
+    const unitB: CompoundUnit = unitA.multiply(unitA);
 
     const quantityA: Quantity = new Quantity(5, unitA);
     const quantityB: Quantity = new Quantity(-5, unitA);

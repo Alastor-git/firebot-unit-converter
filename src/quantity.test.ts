@@ -1,6 +1,7 @@
 import { UnitMismatchError, ValueError } from "./errors";
 import { Quantity } from "./quantity";
 import { UnitDimensions } from "./Unit/abstract-unit";
+import { CompoundUnit } from "./Unit/compound-unit";
 import { Unit } from "./Unit/unit";
 
 
@@ -174,7 +175,7 @@ test("subtract", () => {
 });
 */
 test("multiply", () => {
-    const unitC: Unit = unitA.multiply(unitB);
+    const unitC: CompoundUnit = unitA.multiply(unitB);
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitB);
     const quantityC: Quantity = new Quantity(value1 * value2, unitC);
@@ -197,7 +198,7 @@ test("multiply", () => {
 });
 
 test("divide", () => {
-    const unitC: Unit = unitA.divide(unitB);
+    const unitC: CompoundUnit = unitA.divide(unitB);
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitB);
     const quantityC: Quantity = new Quantity(value1 / value2, unitC);
@@ -230,10 +231,10 @@ test('power', () => {
     const powerC: number = 2;
     const powerD: number = -powerC;
 
-    const unitC: Unit = unitA.power(powerA);
-    const unitD: Unit = unitA.power(powerB);
-    const unitE: Unit = unitA.power(powerC);
-    const unitF: Unit = unitA.power(powerD);
+    const unitC: CompoundUnit = unitA.power(powerA);
+    const unitD: CompoundUnit = unitA.power(powerB);
+    const unitE: CompoundUnit = unitA.power(powerC);
+    const unitF: CompoundUnit = unitA.power(powerD);
 
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityAA: Quantity = new Quantity(value1 ** powerA, unitC);

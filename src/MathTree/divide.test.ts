@@ -9,6 +9,7 @@ import { UnitSymbol } from "./unit";
 import { Numeric } from "./numeric";
 import { Multiply } from "./multiply";
 import { Divide } from "./divide";
+import { CompoundUnit } from "@/Unit/compound-unit";
 
 
 test('constructor', () => {
@@ -42,7 +43,7 @@ test('parseUnits', () => {
 test('collapse', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
     const unitC: Unit = new Unit('C', 'unit C', {M: 1}, 2, 1);
-    const unitAC: Unit = unitA.divide(unitC);
+    const unitAC: CompoundUnit = unitA.divide(unitC);
 
     const quantityB: Quantity = new Quantity(-5, unitA);
 
