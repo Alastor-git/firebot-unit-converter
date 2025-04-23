@@ -96,4 +96,12 @@ export abstract class AbstractUnit {
     abstract divide(other: AbstractUnit | number): AbstractUnit | Quantity;
 
     abstract power(exponent: number): AbstractUnit;
+
+    toString() {
+        try {
+            return this.preferredSymbol;
+        } catch {
+            return JSON.stringify(this);
+        }
+    }
 }

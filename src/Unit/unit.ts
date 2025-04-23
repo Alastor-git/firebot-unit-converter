@@ -86,5 +86,4 @@ export class Unit extends AbstractUnit {
     applyPrefix(prefix: Prefix, unitSymbol?: string): PrefixedUnit {
         return new PrefixedUnit(prefix, this, unitSymbol);
     }
-    // TODO: toString
 }
