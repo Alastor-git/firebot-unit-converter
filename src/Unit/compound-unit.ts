@@ -32,72 +32,37 @@ export class CompoundUnit extends AbstractUnit {
         return newUnit;
     }
 
-    // TODO: Isn't addFactor code now mowtly redundant with addComponent ? Shouldn't it just call addComponent ? 
     addFactor(unit: Unit | PrefixedUnit | null, exponent: number = 1): CompoundUnit {
-        let unitSymbol: string;
-        let baseUnit: Unit;
-        let prefixBase: number;
-        let prefixExponent: number;
+        let component: UnitComponent;
         // If exponent is 0, we aren't changing anything
         if (exponent === 0 || unit === null) {
             this.updateUnit();
             return this;
         }
         if (unit instanceof PrefixedUnit) {
-            baseUnit = unit.baseUnit;
-            prefixBase = unit.prefix.base;
-            prefixExponent = unit.prefix.exponent;
+            component = {
+                unit: unit.baseUnit,
+                unitExponent: 1,
+                prefix: unit.prefix,
+                prefixBase: unit.prefix.base,
+                prefixExponent: unit.prefix.exponent
+            };
         } else { // (unit instanceof Unit)
-            baseUnit = unit;
-            prefixBase = 1;
-            prefixExponent = 0;
-        }
-        const componentsKeys = Object.keys(this.components);
-        const matchingSymbols = componentsKeys.filter(componentSymbol => baseUnit.symbols.includes(componentSymbol));
-        // If there was a single components, we switch the existing component to a delta unit.
-        if (componentsKeys.length === 1) {
-            this.components[componentsKeys[0]].unit = this.components[componentsKeys[0]].unit.deltaUnit();
-        }
-        // If this isn't the first component or it is to a power, the unit we add must be a delta unit
-        if (componentsKeys.length > 0 || exponent !== 1) {
-            baseUnit = baseUnit.deltaUnit();
-        }
-        // If the unit is already part of the compound, add to the component, otherwise add the unit.
-        if (matchingSymbols.length > 1) {
-            throw new UnitError(`Several components match with unit ${unit}`);
-        } else if (matchingSymbols.length === 1) {
-            unitSymbol = matchingSymbols[0];
-            if (!this.components[unitSymbol].unit.isDeltaEqual(baseUnit)) {
-                throw new UnitError(`Symbols match for ${unitSymbol} but units do not match.`);
-            }
-            if (this.components[unitSymbol].prefixBase !== 1 && prefixBase !== 1 && this.components[unitSymbol].prefixBase !== prefixBase) {
-                throw new PrefixError(`Prefixes for unit ${unitSymbol} don't have the same base.`);
-            }
-            if (prefixBase !== 1) {
-                this.components[unitSymbol].prefixBase = prefixBase;
-            }
-            this.components[unitSymbol].unitExponent += exponent;
-            this.components[unitSymbol].prefixExponent += prefixExponent * exponent;
-            // We keep the unit registered as part of the component if the exponent cancels out.
-            // Allows to keep prefixCoeff and possibly reapply it to future factors using the same unit
-        } else { // No matching symbol
-            unitSymbol = unit.preferredUnitSymbol;
-            this.components[unitSymbol] = {
-                unit: baseUnit,
-                unitExponent: exponent,
-                prefixBase: prefixBase,
-                prefixExponent: prefixExponent * exponent
+            component = {
+                unit: unit,
+                unitExponent: 1,
+                prefixBase: 1,
+                prefixExponent: 0
             };
         }
-        this.updateUnit();
-        return this;
+        return this.addComponent(component, exponent);
     }
 
     addComponent(component: UnitComponent, exponent: number = 1): CompoundUnit {
         let unitSymbol: string;
         let baseUnit: Unit = component.unit;
         const unitExponent: number = component.unitExponent * exponent;
-        const prefix: Prefix | undefined = component.prefix ?? undefined;
+        //const prefix: Prefix | undefined = component.prefix ?? undefined;
         const prefixBase: number = component.prefixBase;
         const prefixExponent: number = component.prefixExponent * exponent;
 
@@ -134,7 +99,7 @@ export class CompoundUnit extends AbstractUnit {
             this.components[unitSymbol] = {
                 unit: baseUnit,
                 unitExponent: unitExponent,
-                prefix: prefix,
+                //prefix: prefix,
                 prefixBase: prefixBase,
                 prefixExponent: prefixExponent
             };
