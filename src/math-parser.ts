@@ -1,6 +1,7 @@
 import regexEscape from "regex-escape";
 import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError } from "./errors";
 import { MathTree, Empty, StringSymbol, Numeric, Add, Oppose, Multiply, Divide, Power } from './MathTree';
+import { logger } from "./shared/firebot-modules";
 
 export class ParseMath {
     static groupDelimiters: Record<string, string> = {'(': ')', '[': ']', '{': '}'};
@@ -108,7 +109,8 @@ export class ParseMath {
 
 
     static makeTree(atoms: Array<MathTree>): MathTree {
-        const operations: string[] = ['+', '-', '*', '/', '^'];
+        // 'i*' represents implicit multiplication
+        const operations: string[] = ['+', '-', '*', '/', '^', 'i*'];
 
         // Order of operations :
         // Trim space tokens at start or end of chain
@@ -119,14 +121,15 @@ export class ParseMath {
         while ((lastAtom = atoms.at(-1)) instanceof StringSymbol && lastAtom.value === ' ') {
             atoms.pop();
         }
-        // - \s and . are alias for *
-        atoms = atoms.map(atom => (atom instanceof StringSymbol && (atom.value === ' ' || atom.value === '.') ? new StringSymbol('*') : atom));
+        // - \s is an alias for implicit multiplication i* and and . an alias for explicit multiplication *
+        atoms = atoms.map(atom => (atom instanceof StringSymbol && (atom.value === ' ') ? new StringSymbol('i*') : atom));
+        atoms = atoms.map(atom => (atom instanceof StringSymbol && (atom.value === '.') ? new StringSymbol('*') : atom));
         let processedAtoms: Array<MathTree> = [];
         // - Check for start/end of chain ==> do as part of operations processing ?
         // Sanitize sequences of operators
         while (atoms.length > 0) {
             // Can't be undefined, as we checked the length
-            const atom: MathTree = atoms.shift() as MathTree;
+            let atom: MathTree = atoms.shift() as MathTree;
             const nextAtom: MathTree | undefined = atoms[0];
             let lastAtom: MathTree | undefined = processedAtoms.at(-1);
 
@@ -140,14 +143,14 @@ export class ParseMath {
                 if (atom instanceof StringSymbol && atom.value === '+') {
                     // + as first atom gets gobbled
                     continue;
-                } else if (atom instanceof StringSymbol && ['*', '/', '^'].includes(atom.value)) {
+                } else if (atom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(atom.value)) {
                     throw new InvalidOperation(`${atom} is invalid as the first operation. `);
                 }
             }
 
             // Sanitize last atom
             if (nextAtom === undefined) {
-                if (atom instanceof StringSymbol && ['+', '-', '*', '/', '^'].includes(atom.value)) {
+                if (atom instanceof StringSymbol && ['+', '-', '*', 'i*', '/', '^'].includes(atom.value)) {
                     throw new InvalidOperation(`${atom} is invalid as the last operation. `);
                 }
             }
@@ -159,6 +162,11 @@ export class ParseMath {
                 // Cancel the last + if we still have one
                 processedAtoms.pop();
                 lastAtom = processedAtoms.at(-1);
+            }
+
+            // Keep i* StringSymbol (i.e. '2nm' or 'cm kL'). In all other cases, i* => *
+            if (atom instanceof StringSymbol && atom.value === 'i*' && !(nextAtom instanceof StringSymbol)) {
+                atom = new StringSymbol('*');
             }
 
             // Sanitize atom sequences
@@ -174,9 +182,9 @@ export class ParseMath {
                 processedAtoms.push(atom);
             } else if (
                 atom instanceof StringSymbol && atom.value === '+' &&
-                nextAtom instanceof StringSymbol && ['*', '/', '^'].includes(nextAtom.value)
+                nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)
             ) {
-                // + *, + /, + ^ ==> error
+                // + *, + i*, + /, + ^ ==> error
                 throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '-' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // - + ==> -
@@ -189,39 +197,42 @@ export class ParseMath {
                 if (walkback !== undefined) {
                     atoms.unshift(walkback);
                 }
-            } else if (atom instanceof StringSymbol && atom.value === '-' && nextAtom instanceof StringSymbol && ['*', '/', '^'].includes(nextAtom.value)) {
-                // - *, - /, - ^ ==> error
+            } else if (atom instanceof StringSymbol && atom.value === '-' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
+                // - *, - i*, - /, - ^ ==> error
                 throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
-            } else if (atom instanceof StringSymbol && atom.value === '*' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
-                // * + ==> *
+            } else if (atom instanceof StringSymbol && ['*', 'i*'].includes(atom.value) && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
+                // * +, i* + ==> *
                 atoms[0] = new StringSymbol('*');
-            } else if (atom instanceof StringSymbol && atom.value === '*' && nextAtom instanceof StringSymbol && ['*', '/', '^'].includes(nextAtom.value)) {
-                // * *, * /, * ^ ==> error
+            } else if (atom instanceof StringSymbol && atom.value === '*' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
+                // * *, * i*, * /, * ^ ==> error
+                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+            } else if (atom instanceof StringSymbol && atom.value === 'i*' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
+                // i* *, i* i*, i* /, i* ^ ==> error
                 throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '/' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // / + ==> /
                 atoms[0] = new StringSymbol('/');
-            } else if (atom instanceof StringSymbol && atom.value === '/' && nextAtom instanceof StringSymbol && ['*', '/', '^'].includes(nextAtom.value )) {
-                // / *, / /, / ^ ==> error
+            } else if (atom instanceof StringSymbol && atom.value === '/' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
+                // / *, / i*, / /, / ^ ==> error
                 throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '^' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // ^ + ==> ^
                 atoms[0] = new StringSymbol('^');
-            } else if (atom instanceof StringSymbol && atom.value === '^' && nextAtom instanceof StringSymbol && ['*', '/', '^'].includes(nextAtom.value)) {
-                // ^ *, ^ /, ^ ^ ==> error
+            } else if (atom instanceof StringSymbol && atom.value === '^' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
+                // ^ *, ^ i*, ^ /, ^ ^ ==> error
                 throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
             } else if (
                 nextAtom !== undefined &&
                 (!(atom instanceof StringSymbol) || !operations.includes(atom.value)) &&
                 (!(nextAtom instanceof StringSymbol) || !operations.includes(nextAtom.value))
             ) {
-                // MathTree MathTree ==> MathTree * MathTree
+                // MathTree MathTree ==> MathTree i* MathTree
                 // TODO: If I ever want to implement functions, this needs to change.
                 // Function = [Symbol MathTree] at this point, so here we destroy it.
-                atoms.unshift(new StringSymbol('*'));
+                atoms.unshift(new StringSymbol('i*'));
                 processedAtoms.push(atom);
             } else {
-                // + -, * -, / -, ^ -, Operator MathTree, MathTree Operator ==> valid
+                // + -, * -, i* -, / -, ^ -, Operator MathTree, MathTree Operator ==> valid
                 processedAtoms.push(atom);
             }
         }
@@ -242,6 +253,34 @@ export class ParseMath {
                 }
                 const lastAtom: MathTree = processedAtoms.pop() as MathTree;
                 processedAtoms.push(new Power(lastAtom, nextAtom));
+            } else {
+                processedAtoms.push(atom);
+            }
+        }
+        atoms = processedAtoms;
+        processedAtoms = [];
+
+        // Implicit Multiply
+        while (atoms.length > 0) {
+            // Can't be undefined, as we checked the length
+            const atom: MathTree = atoms.shift() as MathTree;
+            if (atom instanceof StringSymbol && atom.value === 'i*') {
+                // atoms = [..., i* ] or [ i*, ...] hould haved thrown an error already
+                let nextAtom: MathTree = atoms.shift() as MathTree;
+                // Handle sequence a i* - b (shouldn't happen)
+                if (nextAtom instanceof StringSymbol && nextAtom.value === '-') {
+                    nextAtom = new Oppose(atoms.shift() as MathTree);
+                }
+                const lastAtom: MathTree = processedAtoms.pop() as MathTree;
+                if (lastAtom instanceof Multiply && nextAtom instanceof Multiply) {
+                    processedAtoms.push(new Multiply(...lastAtom.factors, ...nextAtom.factors));
+                } else if (lastAtom instanceof Multiply) {
+                    processedAtoms.push(new Multiply(...lastAtom.factors, nextAtom));
+                } else if (nextAtom instanceof Multiply) {
+                    processedAtoms.push(new Multiply(lastAtom, ...nextAtom.factors));
+                } else {
+                    processedAtoms.push(new Multiply(lastAtom, nextAtom));
+                }
             } else {
                 processedAtoms.push(atom);
             }
@@ -278,7 +317,7 @@ export class ParseMath {
                 let nextAtom: MathTree = atoms.shift() as MathTree;
                 // Handle sequence a * - b
                 if (nextAtom instanceof StringSymbol && nextAtom.value === '-') {
-                    nextAtom = new Oppose(atoms.shift() as MathTree) ;
+                    nextAtom = new Oppose(atoms.shift() as MathTree);
                 }
                 const lastAtom: MathTree = processedAtoms.pop() as MathTree;
                 if (lastAtom instanceof Multiply && nextAtom instanceof Multiply) {

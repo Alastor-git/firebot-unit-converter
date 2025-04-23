@@ -87,7 +87,4 @@ export class Unit extends AbstractUnit {
         return new PrefixedUnit(prefix, this, unitSymbol);
     }
     // TODO: toString
-    // TODO: Keep a record of the UnitTree in a similar fashion to MathTree ?
-    // TODO: Keep a record of each symbol with its power as it's purely multiplicative ?
-    // TODO: Keep track of prefixes ? UnitWithPrefix class ?
 }
