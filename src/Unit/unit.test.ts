@@ -218,6 +218,8 @@ test("multiply", () => {
     expect(unitB.multiply(unitA).isEqual(unitAB)).toBe(true);
     expect(Unit.ONE.multiply(unitA).isDeltaEqual(unitA)).toBe(true);
     expect(Unit.ONE.multiply(unitA).isEqual(unitA)).toBe(false);
+    expect(unitA.multiply(Unit.ONE).isDeltaEqual(unitA)).toBe(true);
+    expect(unitA.multiply(Unit.ONE).isEqual(unitA)).toBe(false);
 
     expect(unitA.multiply(5).isEqual(quantityA)).toBe(true);
 });
@@ -271,27 +273,27 @@ test("power", () => {
 test('applyPrefix', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1});
     const unitB: Unit = new Unit(['A', 'B'], unitA.name, unitA.dimensions);
-    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3);
+    const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
     const untikA: Unit = new Unit(
-        `${prefix_k.symbol}${unitA.preferredUnitSymbol}`,
-        `${prefix_k.name}${unitA.name}`,
+        `${prefixk.symbol}${unitA.preferredUnitSymbol}`,
+        `${prefixk.name}${unitA.name}`,
         unitA.dimensions,
-        unitA.coeff * prefix_k.factor,
+        unitA.coeff * prefixk.factor,
         unitA.offset
     );
     untikA._preferredUnitSymbol = null;
     const untikB: Unit = new Unit(
-        unitB.symbols.map(symbol => `${prefix_k.symbol}${symbol}`),
-        `${prefix_k.name}${unitB.name}`,
+        unitB.symbols.map(symbol => `${prefixk.symbol}${symbol}`),
+        `${prefixk.name}${unitB.name}`,
         unitB.dimensions,
-        unitB.coeff * prefix_k.factor,
+        unitB.coeff * prefixk.factor,
         unitB.offset
     );
-    expect(unitA.applyPrefix(prefix_k)).toMatchObject(untikA);
+    expect(unitA.applyPrefix(prefixk)).toMatchObject(untikA);
     untikA._preferredUnitSymbol = 'A';
-    expect(unitA.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
-    expect(unitB.applyPrefix(prefix_k, 'A')).toMatchObject(untikA);
+    expect(unitA.applyPrefix(prefixk, 'A')).toMatchObject(untikA);
+    expect(unitB.applyPrefix(prefixk, 'A')).toMatchObject(untikA);
     untikB._preferredUnitSymbol = null;
-    expect(unitB.applyPrefix(prefix_k)).toMatchObject(untikB);
-    expect(() => unitB.applyPrefix(prefix_k, 'C')).toThrow(ValueError);
+    expect(unitB.applyPrefix(prefixk)).toMatchObject(untikB);
+    expect(() => unitB.applyPrefix(prefixk, 'C')).toThrow(ValueError);
 });

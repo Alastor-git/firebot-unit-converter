@@ -5,7 +5,7 @@ import { Prefix } from "./prefix";
 import { Unit } from "./unit";
 import { CompoundUnit, UnitComponent } from "./compound-unit";
 import { PrefixedUnit } from "./prefixed-unit";
-import { PrefixError, UnitError, ValueError } from "@/errors";
+import { PrefixError, UnitError } from "@/errors";
 import { Quantity } from "@/quantity";
 
 const prefixM: Prefix = new Prefix('M', 'mega', 10, 6);
@@ -638,6 +638,7 @@ test("divide", () => {
     expect(unittA.divide(unittB)).toMatchObject(unittAB);
     expect(unittA.divide(unittB).isEqual(unittAB)).toBe(true);
     expect(unittB.divide(unittA).isEqual(unittAB)).toBe(false);
+    expect(unittA.divide(unittB).multiply(unittB).isDeltaEqual(unittA)).toBe(true);
     expect(unittA.divide(Unit.ONE).isDeltaEqual(unittA)).toBe(true);
     expect(unittA.divide(Unit.ONE).isEqual(unittA)).toBe(true);
     expect(unittC.divide(Unit.ONE).isDeltaEqual(unittC)).toBe(true);

@@ -1,9 +1,13 @@
-/* eslint-disable camelcase */
+import "@/mocks/firebot-modules";
+import { logger } from "@/shared/firebot-modules";
 import { ValueError } from "@/errors";
 import { UnitDimensions } from "./abstract-unit";
 import { Prefix } from "./prefix";
 import { PrefixedUnit } from "./prefixed-unit";
 import { Unit } from "./unit";
+import { Quantity } from "@/quantity";
+import { CompoundUnit } from "./compound-unit";
+import { UnitParser } from "@/unit-parser";
 
 const unitSymbol1: string = "uA";
 const unitSymbol2: string = "uB";
@@ -22,15 +26,18 @@ const offset2: number = 125;
 
 const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
 const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
 
-const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3);
-const prefix_m: Prefix = new Prefix('m', 'mili', 10, -3);
+const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
+const prefixm: Prefix = new Prefix('m', 'mili', 10, -3);
+
+UnitParser.registerPrefix(prefixk);
 
 test('constructor', () => {
-    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
-    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
-    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefix_k, unitB);
-    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefix_k, unitB, unitSymbol1);
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefixk, unitB);
+    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefixk, unitB, unitSymbol1);
 
     expect(prefixedUnitA.baseUnit).toMatchObject(unitA);
     expect(prefixedUnitB.baseUnit).toMatchObject(unitA);
@@ -38,28 +45,28 @@ test('constructor', () => {
     expect(prefixedUnitB.dimensions).toMatchObject(unitA.dimensions);
     expect(prefixedUnitA.offset).toBe(unitA.offset);
     expect(prefixedUnitB.offset).toBe(unitA.offset);
-    expect(prefixedUnitA.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitB.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitC.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`, `${prefix_k.symbol}${unitSymbol2}`]);
-    expect(prefixedUnitD.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitA.name).toBe(`${prefix_k.name}${unitA.name}`);
-    expect(prefixedUnitB.name).toBe(`${prefix_k.name}${unitA.name}`);
-    expect(prefixedUnitA.coeff).toBe(prefix_k.factor * unitA.coeff);
-    expect(prefixedUnitB.coeff).toBe(prefix_k.factor * unitA.coeff);
+    expect(prefixedUnitA.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitB.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitC.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`, `${prefixk.symbol}${unitSymbol2}`]);
+    expect(prefixedUnitD.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitA.name).toBe(`${prefixk.name}${unitA.name}`);
+    expect(prefixedUnitB.name).toBe(`${prefixk.name}${unitA.name}`);
+    expect(prefixedUnitA.coeff).toBe(prefixk.factor * unitA.coeff);
+    expect(prefixedUnitB.coeff).toBe(prefixk.factor * unitA.coeff);
 });
 
 test('copy', () => {
-    const testObject: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
+    const testObject: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
     const testObjectCopy: PrefixedUnit = testObject.copy();
     expect(testObjectCopy).toMatchObject(testObject);
-    testObjectCopy.prefix = prefix_m;
+    testObjectCopy.prefix = prefixm;
     expect(testObjectCopy).not.toMatchObject(testObject);
 });
 
 test('preferredUnitSymbol', () => {
-    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
-    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
-    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefix_k, unitB, unitSymbol2);
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefixk, unitB, unitSymbol2);
 
     expect(prefixedUnitA.preferredUnitSymbol).toBe(unitA.preferredSymbol);
     expect(prefixedUnitB.preferredUnitSymbol).toBe(unitSymbol1);
@@ -75,76 +82,117 @@ test('preferredUnitSymbol', () => {
 });
 
 test('prefix', () => {
-    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
-    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
-    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefix_k, unitB, unitSymbol2);
-    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefix_k, unitB);
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefixk, unitB, unitSymbol2);
+    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefixk, unitB);
 
-    expect(prefixedUnitA).toHaveProperty('_prefix', prefix_k);
-    expect(prefixedUnitB).toHaveProperty('_prefix', prefix_k);
-    expect(prefixedUnitC).toHaveProperty('_prefix', prefix_k);
-    expect(prefixedUnitD).toHaveProperty('_prefix', prefix_k);
+    expect(prefixedUnitA).toHaveProperty('_prefix', prefixk);
+    expect(prefixedUnitB).toHaveProperty('_prefix', prefixk);
+    expect(prefixedUnitC).toHaveProperty('_prefix', prefixk);
+    expect(prefixedUnitD).toHaveProperty('_prefix', prefixk);
 
-    expect(prefixedUnitA.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitB.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitC.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol2}`]);
-    expect(prefixedUnitD.symbols).toMatchObject([`${prefix_k.symbol}${unitSymbol1}`, `${prefix_k.symbol}${unitSymbol2}`]);
+    expect(prefixedUnitA.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitB.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitC.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol2}`]);
+    expect(prefixedUnitD.symbols).toMatchObject([`${prefixk.symbol}${unitSymbol1}`, `${prefixk.symbol}${unitSymbol2}`]);
 
-    expect(prefixedUnitA.name).toBe(`${prefix_k.name}${unitA.name}`);
-    expect(prefixedUnitB.name).toBe(`${prefix_k.name}${unitA.name}`);
-    expect(prefixedUnitC.name).toBe(`${prefix_k.name}${unitB.name}`);
-    expect(prefixedUnitD.name).toBe(`${prefix_k.name}${unitB.name}`);
+    expect(prefixedUnitA.name).toBe(`${prefixk.name}${unitA.name}`);
+    expect(prefixedUnitB.name).toBe(`${prefixk.name}${unitA.name}`);
+    expect(prefixedUnitC.name).toBe(`${prefixk.name}${unitB.name}`);
+    expect(prefixedUnitD.name).toBe(`${prefixk.name}${unitB.name}`);
 
-    expect(prefixedUnitA.coeff).toBe(prefix_k.factor * unitA.coeff);
-    expect(prefixedUnitB.coeff).toBe(prefix_k.factor * unitA.coeff);
-    expect(prefixedUnitC.coeff).toBe(prefix_k.factor * unitB.coeff);
-    expect(prefixedUnitD.coeff).toBe(prefix_k.factor * unitB.coeff);
+    expect(prefixedUnitA.coeff).toBe(prefixk.factor * unitA.coeff);
+    expect(prefixedUnitB.coeff).toBe(prefixk.factor * unitA.coeff);
+    expect(prefixedUnitC.coeff).toBe(prefixk.factor * unitB.coeff);
+    expect(prefixedUnitD.coeff).toBe(prefixk.factor * unitB.coeff);
 
-    prefixedUnitA.prefix = prefix_m;
-    prefixedUnitB.prefix = prefix_m;
-    prefixedUnitC.prefix = prefix_m;
-    prefixedUnitD.prefix = prefix_m;
+    prefixedUnitA.prefix = prefixm;
+    prefixedUnitB.prefix = prefixm;
+    prefixedUnitC.prefix = prefixm;
+    prefixedUnitD.prefix = prefixm;
 
-    expect(prefixedUnitA).toHaveProperty('_prefix', prefix_m);
-    expect(prefixedUnitB).toHaveProperty('_prefix', prefix_m);
-    expect(prefixedUnitC).toHaveProperty('_prefix', prefix_m);
-    expect(prefixedUnitD).toHaveProperty('_prefix', prefix_m);
+    expect(prefixedUnitA).toHaveProperty('_prefix', prefixm);
+    expect(prefixedUnitB).toHaveProperty('_prefix', prefixm);
+    expect(prefixedUnitC).toHaveProperty('_prefix', prefixm);
+    expect(prefixedUnitD).toHaveProperty('_prefix', prefixm);
 
-    expect(prefixedUnitA.symbols).toMatchObject([`${prefix_m.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitB.symbols).toMatchObject([`${prefix_m.symbol}${unitSymbol1}`]);
-    expect(prefixedUnitC.symbols).toMatchObject([`${prefix_m.symbol}${unitSymbol2}`]);
-    expect(prefixedUnitD.symbols).toMatchObject([`${prefix_m.symbol}${unitSymbol1}`, `${prefix_m.symbol}${unitSymbol2}`]);
+    expect(prefixedUnitA.symbols).toMatchObject([`${prefixm.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitB.symbols).toMatchObject([`${prefixm.symbol}${unitSymbol1}`]);
+    expect(prefixedUnitC.symbols).toMatchObject([`${prefixm.symbol}${unitSymbol2}`]);
+    expect(prefixedUnitD.symbols).toMatchObject([`${prefixm.symbol}${unitSymbol1}`, `${prefixm.symbol}${unitSymbol2}`]);
 
-    expect(prefixedUnitA.name).toBe(`${prefix_m.name}${unitA.name}`);
-    expect(prefixedUnitB.name).toBe(`${prefix_m.name}${unitA.name}`);
-    expect(prefixedUnitC.name).toBe(`${prefix_m.name}${unitB.name}`);
-    expect(prefixedUnitD.name).toBe(`${prefix_m.name}${unitB.name}`);
+    expect(prefixedUnitA.name).toBe(`${prefixm.name}${unitA.name}`);
+    expect(prefixedUnitB.name).toBe(`${prefixm.name}${unitA.name}`);
+    expect(prefixedUnitC.name).toBe(`${prefixm.name}${unitB.name}`);
+    expect(prefixedUnitD.name).toBe(`${prefixm.name}${unitB.name}`);
 
-    expect(prefixedUnitA.coeff).toBe(prefix_m.factor * unitA.coeff);
-    expect(prefixedUnitB.coeff).toBe(prefix_m.factor * unitA.coeff);
-    expect(prefixedUnitC.coeff).toBe(prefix_m.factor * unitB.coeff);
-    expect(prefixedUnitD.coeff).toBe(prefix_m.factor * unitB.coeff);
+    expect(prefixedUnitA.coeff).toBe(prefixm.factor * unitA.coeff);
+    expect(prefixedUnitB.coeff).toBe(prefixm.factor * unitA.coeff);
+    expect(prefixedUnitC.coeff).toBe(prefixm.factor * unitB.coeff);
+    expect(prefixedUnitD.coeff).toBe(prefixm.factor * unitB.coeff);
 
     prefixedUnitA._prefix = null;
     expect(() => prefixedUnitA.prefix).toThrow(ValueError);
 });
 
 test('preferredSymbol', () => {
-    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
-    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
 
-    expect(prefixedUnitA.preferredSymbol).toBe(`${prefix_k.symbol}${unitA.preferredSymbol}`);
-    expect(prefixedUnitB.preferredSymbol).toBe(`${prefix_k.symbol}${unitSymbol1}`);
+    expect(prefixedUnitA.preferredSymbol).toBe(`${prefixk.symbol}${unitA.preferredSymbol}`);
+    expect(prefixedUnitB.preferredSymbol).toBe(`${prefixk.symbol}${unitSymbol1}`);
 });
 
 test('deltaUnit', () => {
     const unitC: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, 0);
 
-    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefix_k, unitA, unitSymbol1);
-    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefix_k, unitC, unitSymbol1);
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitC, unitSymbol1);
     expect(prefixedUnitA.deltaUnit()).toMatchObject(prefixedUnitB);
 
-    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefix_k, unitA);
-    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefix_k, unitC);
+    const prefixedUnitC: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const prefixedUnitD: PrefixedUnit = new PrefixedUnit(prefixk, unitC);
     expect(prefixedUnitC.deltaUnit()).toMatchObject(prefixedUnitD);
+});
+
+test("multiply", () => {
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitC, unitSymbol2);
+    const quantityA: Quantity = new Quantity(5, prefixedUnitA);
+    const unitAB: CompoundUnit = new CompoundUnit(prefixedUnitA).addFactor(prefixedUnitB);
+
+    expect(prefixedUnitA.multiply(prefixedUnitB).isEqual(unitAB)).toBe(true);
+    expect(prefixedUnitB.multiply(prefixedUnitA).isEqual(unitAB)).toBe(true);
+    expect(prefixedUnitA.multiply(Unit.ONE).isDeltaEqual(prefixedUnitA)).toBe(true);
+    expect(prefixedUnitA.multiply(Unit.ONE).isEqual(prefixedUnitA)).toBe(false);
+
+    expect(prefixedUnitA.multiply(5).isEqual(quantityA)).toBe(true);
+});
+
+test("divide", () => {
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitC, unitSymbol2);
+    const quantityA: Quantity = new Quantity(1 / 5, prefixedUnitA);
+    const unitAB: CompoundUnit = new CompoundUnit(prefixedUnitA).addFactor(prefixedUnitB, -1);
+
+    expect(prefixedUnitA.divide(prefixedUnitB).isEqual(unitAB)).toBe(true);
+    expect(prefixedUnitB.divide(prefixedUnitA).isEqual(unitAB)).toBe(false);
+    expect(prefixedUnitA.divide(prefixedUnitB).multiply(prefixedUnitB).isDeltaEqual(prefixedUnitA)).toBe(true);
+    expect(prefixedUnitA.divide(Unit.ONE).isDeltaEqual(prefixedUnitA)).toBe(true);
+    expect(prefixedUnitA.divide(Unit.ONE).isEqual(prefixedUnitA)).toBe(false);
+    expect(prefixedUnitA.divide(prefixedUnitA).isEqual(Unit.ONE)).toBe(true);
+
+    expect(prefixedUnitA.divide(5).isEqual(quantityA)).toBe(true);
+});
+
+test("power", () => {
+    const power: number = 3;
+    const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
+    const unitApow: CompoundUnit = new CompoundUnit(prefixedUnitA, power);
+
+    expect(prefixedUnitA.power(power).isEqual(unitApow)).toBe(true);
+    expect(prefixedUnitA.power(power).isEqual(prefixedUnitA)).toBe(false);
+    expect(prefixedUnitA.power(power).power(1 / power).isDeltaEqual(prefixedUnitA)).toBe(true);
+    expect(prefixedUnitA.power(0).isEqual(Unit.ONE)).toBe(true);
 });
