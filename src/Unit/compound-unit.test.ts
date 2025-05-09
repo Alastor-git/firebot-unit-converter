@@ -49,7 +49,7 @@ test('constructor', () => {
             'L': {
                 unit: unitL,
                 unitExponent: 1,
-                prefixBase: 1,
+                prefixBase: 10,
                 prefixExponent: 0
             }
         });
@@ -105,7 +105,7 @@ test('constructor', () => {
             'L': {
                 unit: unitL,
                 unitExponent: 3,
-                prefixBase: 1,
+                prefixBase: 10,
                 prefixExponent: 0
             }
         });
@@ -236,7 +236,7 @@ test('addFactor', () => {
             'L': {
                 unit: unitL,
                 unitExponent: 1,
-                prefixBase: 1, // TODO: Should probably be set to 10 by knowing the unit base
+                prefixBase: 10,
                 prefixExponent: 0
             },
             'g': {
@@ -414,13 +414,13 @@ test('addFactor', () => {
     unittL.components['in'] = {
             unit: unitin,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     unittL.components["''"] = {
             unit: unitin,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     expect(() => unittL.addFactor(unitin, 1)).toThrow(UnitError);
@@ -502,19 +502,19 @@ test('addComponent', () => {
     unittL.components['in'] = {
             unit: unitin,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     unittL.components["''"] = {
             unit: unitin,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     const unitinComponent: UnitComponent = {
             unit: unitin,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     expect(() => unittL.addComponent(unitinComponent)).toThrow(UnitError);
@@ -524,7 +524,7 @@ test('addComponent', () => {
     const unitFakemComponent: UnitComponent = {
             unit: unitFakem,
             unitExponent: 1,
-            prefixBase: 1,
+            prefixBase: 10,
             prefixExponent: 0
     };
     expect(() => unittM.addComponent(unitFakemComponent)).toThrow(UnitError);

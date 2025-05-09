@@ -44,14 +44,14 @@ export class CompoundUnit extends AbstractUnit {
                 unit: unit.baseUnit,
                 unitExponent: 1,
                 prefix: unit.prefix,
-                prefixBase: unit.prefix.base,
+                prefixBase: unit.base,
                 prefixExponent: unit.prefix.exponent
             };
         } else { // (unit instanceof Unit)
             component = {
                 unit: unit,
                 unitExponent: 1,
-                prefixBase: 1,
+                prefixBase: unit.base,
                 prefixExponent: 0
             };
         }
@@ -200,7 +200,7 @@ export class CompoundUnit extends AbstractUnit {
                     remainingFactor /= component.prefixBase ** (prefix.exponent * component.unitExponent - currentPrefixExponent);
                 }
             } else {
-                const newPrefixBase: number = 10; // TODO: Have units store a preferred base so we can know what to pick here?
+                const newPrefixBase: number = component.unit.base;
                 const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(newPrefixBase);
                 const prefix: Prefix | null = UnitParser.findBestPrefixFromExponent(remainingExponent / component.unitExponent, newPrefixBase);
                 if (prefix) {
@@ -227,7 +227,8 @@ export class CompoundUnit extends AbstractUnit {
             exponentDifference: number;
         }[] = [];
         sortedFilteredComponents.forEach((component1) => {
-            const newPrefixBase: number = component1.prefixBase !== 1 ? component1.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+            // TODO: Do we ever expect to have a 1 here ?
+            const newPrefixBase: number = component1.prefixBase !== 1 ? component1.prefixBase : component1.unit.base;
             const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(newPrefixBase);
             const component1OldExponent: number = (component1.prefix?.exponent ?? 0) * component1.unitExponent;
 
@@ -240,7 +241,6 @@ export class CompoundUnit extends AbstractUnit {
                     return;
                 }
                 // Can't be a candidate if both units don't have the same prefix base
-                // FIXME: currently, if component1 doesn't have a prefix, it assumes the base is 10.
                 if (component2.prefixBase !== 1 && component2.prefixBase !== newPrefixBase) {
                     return;
                 }
@@ -282,7 +282,8 @@ export class CompoundUnit extends AbstractUnit {
             solution.component1.prefix = solution.component1NewPrefix;
             solution.component1.prefixBase = solution.newPrefixBase;
             solution.component2.prefix = solution.component2NewPrefix ?? undefined;
-            solution.component2.prefixBase = solution.component2NewPrefix ? solution.newPrefixBase : 1;
+            // TODO: Does that make any sense ?
+            solution.component2.prefixBase = solution.component2NewPrefix ? solution.newPrefixBase : solution.component2.unit.base;
             remainingFactor /= solution.component1.prefixBase ** ((solution.component1?.prefix?.exponent ?? 0) * solution.component1.unitExponent);
             remainingFactor /= solution.component2.prefixBase ** ((solution.component2?.prefix?.exponent ?? 0) * solution.component2.unitExponent);
         }
@@ -299,7 +300,8 @@ export class CompoundUnit extends AbstractUnit {
         });
         resortedFilteredComponents.forEach((component) => {
             if (remainingFactor !== 1 && component.unitExponent >= 2) {
-                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+                // TODO: Do we ever expect to have a 1 here ?
+                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : component.unit.base;
                 const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
                 const totalComponentPrefixExponent: number = remainingExponent + (component.prefix?.exponent ?? 0) * component.unitExponent;
                 // The first term, we fit with as much exponent as we can get.
@@ -337,7 +339,8 @@ export class CompoundUnit extends AbstractUnit {
         // Split a unit with 0 exponent into a ratio of units with prefixes to account for the remaining prefactor
         sortedComponents.forEach((component) => {
             if (remainingFactor !== 1 && component.unitExponent === 0) {
-                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : 10;// TODO: Have units store a preferred base so we can know what to pick here?
+                // TODO: Do we ever expect to have a 1 here ?
+                const newPrefixBase: number = component.prefixBase !== 1 ? component.prefixBase : component.unit.base;
                 const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
                 // At the numerator is the closest to the exact exponent approached from larger absolute values
                 const numeratorPrefix: Prefix | null = UnitParser.findNextPrefixFromExponent(remainingExponent, newPrefixBase);
