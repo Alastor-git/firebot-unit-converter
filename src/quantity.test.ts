@@ -14,14 +14,17 @@ const unitName2: string = "unit B";
 const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 
+const base1: number = 10;
+const base2: number = 10; // TODO: Test different values
+
 const coeff1: number = 1.5;
 const coeff2: number = 2;
 
 const offset1: number = 50;
 const offset2: number = 125;
 
-const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base2, coeff2, offset2);
 
 const value1: number = 6;
 const value2: number = 7;
@@ -70,9 +73,9 @@ test("isDeltaEqual", () => {
 });
 
 test("isEquivalent", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff2, offset2);
-    const unitC: Unit = new Unit(unitSymbol1, unitName1, dimensions2, coeff1, offset1);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff2, offset2);
+    const unitC: Unit = new Unit(unitSymbol1, unitName1, dimensions2, base1, coeff1, offset1);
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity((value1 * coeff1 - offset2 + offset1) / coeff2, unitB);
     const quantityC: Quantity = new Quantity(value1, unitC);
@@ -84,9 +87,9 @@ test("isEquivalent", () => {
     expect(quantityA.isEquivalent(quantityD)).toBe(false);
 
     // Real world data just for sanity check
-    const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 5 / 9, 273.15 - 32 * 5 / 9);
-    const unitCe: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 1, 273.15);
-    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 });
+    const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9);
+    const unitCe: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15);
+    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 }, 10);
 
     const tempValueK: Quantity = new Quantity(334.15, unitK);
     const tempValueC: Quantity = new Quantity(61, unitCe);
@@ -101,7 +104,7 @@ test("add", () => {
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitA);
     const quantityC: Quantity = new Quantity(value1 + value2, unitA);
-    const unitC: Unit = new Unit('t', 't', unitA.dimensions, unitA.coeff * 2, unitA.offset);
+    const unitC: Unit = new Unit('t', 't', unitA.dimensions, base1, unitA.coeff * 2, unitA.offset);
     const quantityD: Quantity = quantityA.convert(unitC);
     const quantityE: Quantity = new Quantity(value2, unitB);
 
@@ -122,8 +125,8 @@ test("add", () => {
 
     // number parameter
     const unit1A: Unit = Unit.ONE;
-    const unit1B: Unit = new Unit('B', 'shift scalar', {}, 1, 10);
-    const unit1C: Unit = new Unit('C', 'scaled scalar', {}, 2);
+    const unit1B: Unit = new Unit('B', 'shift scalar', {}, 10, 1, 10);
+    const unit1C: Unit = new Unit('C', 'scaled scalar', {}, 10, 2);
 
     const quantity1A: Quantity = new Quantity(10, unit1A);
     const quantity1B: Quantity = new Quantity(0, unit1B);
@@ -149,7 +152,7 @@ test("subtract", () => {
     const quantityA: Quantity = new Quantity(value1, unitA);
     const quantityB: Quantity = new Quantity(value2, unitA);
     const quantityC: Quantity = new Quantity(value1 - value2, unitA);
-    const unitC: Unit = new Unit('t', 't', unitA.dimensions, unitA.coeff * 2, unitA.offset);
+    const unitC: Unit = new Unit('t', 't', unitA.dimensions, 10, unitA.coeff * 2, unitA.offset);
     const quantityD: Quantity = quantityA.convert(unitC);
     const quantityE: Quantity = new Quantity(value2, unitB);
     const quantityF: Quantity = new Quantity(-value1, unitA);
@@ -268,10 +271,10 @@ test('power', () => {
 });
 
 test('convert', () => {
-    const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 5 / 9, 273.15 - 32 * 5 / 9);
-    const unitCe: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 1, 273.15);
-    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 });
-    const unitm: Unit = new Unit('m', 'meter', { L: 1 });
+    const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9);
+    const unitCe: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15);
+    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 }, 10);
+    const unitm: Unit = new Unit('m', 'meter', { L: 1 }, 10);
 
     const tempValueK: Quantity = new Quantity(334.15, unitK);
     const tempValueC: Quantity = new Quantity(61, unitCe);
@@ -294,7 +297,7 @@ test('deltaQuantity', () => {
 });
 
 test('toString', () => {
-    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 });
+    const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 }, 10);
 
     const tempValueK: Quantity = new Quantity(334.15, unitK);
 

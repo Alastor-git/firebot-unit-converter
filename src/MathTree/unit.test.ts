@@ -5,7 +5,7 @@ import { PrefixedUnit } from "@/Unit/prefixed-unit";
 
 
 test('constructor', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
     const unitkA: PrefixedUnit = unitA.applyPrefix(prefix_k);
 
@@ -14,7 +14,7 @@ test('constructor', () => {
 });
 
 test('parseUnits', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
     const unitkA: PrefixedUnit = unitA.applyPrefix(prefix_k);
 
@@ -23,7 +23,7 @@ test('parseUnits', () => {
 });
 
 test('collapse', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
     const unitkA: PrefixedUnit = unitA.applyPrefix(prefix_k);
 

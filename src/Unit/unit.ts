@@ -3,8 +3,9 @@ import { Quantity } from "../quantity";
 import { PrefixedUnit } from "./prefixed-unit";
 import { AbstractUnit, UnitDimensions } from "./abstract-unit";
 import { CompoundUnit } from "./compound-unit";
+import { AbstractBasedUnit } from "./abstract-based-unit";
 
-export class Unit extends AbstractUnit {
+export class Unit extends AbstractBasedUnit {
     symbols: string[];
     name: string;
 
@@ -18,6 +19,7 @@ export class Unit extends AbstractUnit {
     constructor(symbol: string | string[],
                 name: string,
                 dimensions: Partial<UnitDimensions> = {},
+                base: number = 10,
                 coeff: number = 1,
                 offset: number = 0) {
         super();
@@ -37,15 +39,16 @@ export class Unit extends AbstractUnit {
         this.symbols = Array.isArray(symbol) ? symbol : [symbol];
         this.preferredUnitSymbol = this.symbols[0];
         this.name = name;
+        this.base = base;
     }
 
     copy(): Unit {
-        const copy = new Unit(this.symbols, this.name, { ...this.dimensions }, this.coeff, this.offset);
+        const copy = new Unit(this.symbols, this.name, { ...this.dimensions }, this.base, this.coeff, this.offset);
         copy.preferredUnitSymbol = this.preferredUnitSymbol;
         return copy;
     }
 
-    static ONE: Unit = new Unit('', '', {}, 1, 0);
+    static ONE: Unit = new Unit('', '', {}, 1, 1, 0);
 
     isNeutralElement(): boolean {
         return this.isEqual(Unit.ONE);
@@ -56,7 +59,7 @@ export class Unit extends AbstractUnit {
             return this;
         }
         // Delta units are identical to the unit, but without an offset
-        return new Unit(this.symbols, this.name, this.dimensions, this.coeff);
+        return new Unit(this.symbols, this.name, this.dimensions, this.base, this.coeff);
     }
 
     multiply(other: number): Quantity;

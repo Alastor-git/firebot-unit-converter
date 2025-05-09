@@ -18,15 +18,18 @@ const unitName2: string = "unit B";
 const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 
+const base1: number = 10;
+const base2: number = 10;
+
 const coeff1: number = 1.5;
 const coeff2: number = 2;
 
 const offset1: number = 50;
 const offset2: number = 125;
 
-const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
-const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, base1, coeff1, offset1);
+const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base2, coeff2, offset2);
 
 const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
 const prefixm: Prefix = new Prefix('m', 'mili', 10, -3);
@@ -145,7 +148,7 @@ test('preferredSymbol', () => {
 });
 
 test('deltaUnit', () => {
-    const unitC: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, 0);
+    const unitC: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, 0);
 
     const prefixedUnitA: PrefixedUnit = new PrefixedUnit(prefixk, unitA, unitSymbol1);
     const prefixedUnitB: PrefixedUnit = new PrefixedUnit(prefixk, unitC, unitSymbol1);

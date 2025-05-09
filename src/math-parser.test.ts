@@ -735,9 +735,9 @@ test('implicit multiplication', () => {
 });
 /* */
 test('match', () => {
-    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 1, 0); // eslint-disable-line camelcase
-    const unit_m: Unit = new Unit('m', 'meter', { L: 1 }); // eslint-disable-line camelcase
-    const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 2.54e-2); // eslint-disable-line camelcase
+    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1, 0); // eslint-disable-line camelcase
+    const unit_m: Unit = new Unit('m', 'meter', { L: 1 }, 10); // eslint-disable-line camelcase
+    const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2); // eslint-disable-line camelcase
 
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
     const prefix_c: Prefix = new Prefix('c', 'centi', 10, -2); // eslint-disable-line camelcase

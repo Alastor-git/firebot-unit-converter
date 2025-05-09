@@ -5,6 +5,7 @@ import { Prefix } from "./prefix";
 import { Quantity } from "../quantity";
 import { Unit } from "./unit";
 import { UnitDimensions } from "./abstract-unit";
+import { PrefixedUnit } from "./prefixed-unit";
 
 const unitSymbol1: string = "uA";
 const unitSymbol2: string = "uB";
@@ -15,6 +16,9 @@ const unitName2: string = "unit B";
 const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0};
 
+const base1: number = 10;
+const base2: number = 10;
+
 const coeff1: number = 1.5;
 const coeff2: number = 2;
 
@@ -22,8 +26,8 @@ const offset1: number = 50;
 const offset2: number = 125;
 
 test("Constructor", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, base1, coeff1, offset1);
 
     expect(unitA.name).toBe(unitName1);
     expect(unitA.symbols).toMatchObject([unitSymbol1]);
@@ -42,7 +46,7 @@ test("Constructor", () => {
     expect(testObject).toHaveProperty('coeff', 1);
     expect(testObject).toHaveProperty('offset', 0);
 
-    testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 8, 9);
+    testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 10, 8, 9);
     expect(testObject).toHaveProperty('symbols', ['a']);
     expect(testObject).toHaveProperty('name', 'b');
     expect(testObject).toHaveProperty('dimensions', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7});
@@ -51,7 +55,7 @@ test("Constructor", () => {
 });
 
 test('copy', () => {
-    const testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 8, 9);
+    const testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 10, 8, 9);
     const testObjectCopy = testObject.copy();
     expect(testObjectCopy).toMatchObject(testObject);
     testObjectCopy.dimensions.L += 1;
@@ -63,8 +67,8 @@ test('copy', () => {
 });
 
 test('preferredUnitSymbol', () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, base1, coeff1, offset1);
 
     expect(unitA.preferredUnitSymbol).toBe(unitSymbol1);
     expect(unitB.preferredUnitSymbol).toBe(unitSymbol1);
@@ -80,8 +84,8 @@ test('preferredUnitSymbol', () => {
 });
 
 test('preferredSymbol', () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, coeff1, offset1);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit([unitSymbol1, unitSymbol2], unitName1, dimensions1, base1, coeff1, offset1);
 
     expect(unitA.preferredSymbol).toBe(unitSymbol1);
     expect(unitB.preferredSymbol).toBe(unitSymbol1);
@@ -90,11 +94,11 @@ test('preferredSymbol', () => {
 });
 
 test("isSameDimension", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset1);
-    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset2);
-    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff2, offset2);
-    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset1);
+    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset2);
+    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff2, offset2);
+    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, offset2);
 
     expect(unitA.isSameDimension(unitA)).toBe(true);
     expect(unitA.isSameDimension(unitB)).toBe(true);
@@ -104,11 +108,11 @@ test("isSameDimension", () => {
 });
 
 test("isDeltaEqual", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset1);
-    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset2);
-    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff2, offset2);
-    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset1);
+    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset2);
+    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff2, offset2);
+    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, offset2);
 
     expect(unitA.isDeltaEqual(unitA)).toBe(true);
     expect(unitA.isDeltaEqual(unitB)).toBe(true);
@@ -118,11 +122,11 @@ test("isDeltaEqual", () => {
 });
 
 test("isEqual", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset1);
-    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff1, offset2);
-    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, coeff2, offset2);
-    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset1);
+    const unitC: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff1, offset2);
+    const unitD: Unit = new Unit(unitSymbol2, unitName2, dimensions1, base1, coeff2, offset2);
+    const unitE: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, offset2);
 
     expect(unitA.isEqual(unitA)).toBe(true);
     expect(unitA.isEqual(unitB)).toBe(true);
@@ -133,56 +137,56 @@ test("isEqual", () => {
 
 test("isDimensionless", () => {
     expect(Unit.ONE.isDimensionless()).toBe(true);
-    let unit: Unit = new Unit('a', 'a', {}, 1, 0);
+    let unit: Unit = new Unit('a', 'a', {}, 10, 1, 0);
     expect(unit.isDimensionless()).toBe(true);
-    unit = new Unit('a', 'a', {}, coeff1, 0);
+    unit = new Unit('a', 'a', {}, 10, coeff1, 0);
     expect(unit.isDimensionless()).toBe(true);
-    unit = new Unit('a', 'a', {}, coeff1, offset1);
+    unit = new Unit('a', 'a', {}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(true);
-    unit = new Unit('a', 'a', {L: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {L: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {M: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {M: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {T: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {T: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {I: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {I: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {THETA: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {THETA: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {N: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {N: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {J: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {J: 1}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
 });
 
 test("isNeutralElement", () => {
     expect(Unit.ONE.isNeutralElement()).toBe(true);
-    let unit: Unit = new Unit('a', 'a', {}, 1, 0);
+    let unit: Unit = new Unit('a', 'a', {}, 10, 1, 0);
     expect(unit.isNeutralElement()).toBe(true);
-    unit = new Unit('a', 'a', {}, coeff1, 0);
+    unit = new Unit('a', 'a', {}, 10, coeff1, 0);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {}, coeff1, offset1);
+    unit = new Unit('a', 'a', {}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {L: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {L: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {M: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {M: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {T: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {T: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {I: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {I: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {THETA: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {THETA: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {N: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {N: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {J: 1}, coeff1, offset1);
+    unit = new Unit('a', 'a', {J: 1}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
 });
 
 test("isAffine/isLinear", () => {
 
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, 0);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, 0);
 
     expect(unitA.isAffine()).toBe(true);
     expect(unitB.isAffine()).toBe(false);
@@ -191,8 +195,8 @@ test("isAffine/isLinear", () => {
 });
 
 test("deltaUnit", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, 0);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, 0);
 
     expect(unitA.deltaUnit().isEqual(unitB)).toBe(true);
     expect(unitA.deltaUnit().isEqual(unitA)).toBe(false);
@@ -200,8 +204,8 @@ test("deltaUnit", () => {
 });
 
 test("multiply", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, offset2);
     const quantityA: Quantity = new Quantity(5, unitA);
     const dimensionMult: UnitDimensions = {
         L: dimensions1.L + dimensions2.L,
@@ -212,7 +216,7 @@ test("multiply", () => {
         N: dimensions1.N + dimensions2.N,
         J: dimensions1.J + dimensions2.J
     };
-    const unitAB: Unit = new Unit(`${unitSymbol1}*${unitSymbol2}`, `${unitName1}*${unitName2}`, dimensionMult, coeff1 * coeff2, 0);
+    const unitAB: Unit = new Unit(`${unitSymbol1}*${unitSymbol2}`, `${unitName1}*${unitName2}`, dimensionMult, base1, coeff1 * coeff2, 0);
 
     expect(unitA.multiply(unitB).isEqual(unitAB)).toBe(true);
     expect(unitB.multiply(unitA).isEqual(unitAB)).toBe(true);
@@ -225,8 +229,8 @@ test("multiply", () => {
 });
 
 test("divide", () => {
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
-    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, coeff2, offset2);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
+    const unitB: Unit = new Unit(unitSymbol2, unitName2, dimensions2, base1, coeff2, offset2);
     const quantityA: Quantity = new Quantity(1 / 5, unitA);
     const dimensionDiv: UnitDimensions = {
         L: dimensions1.L - dimensions2.L,
@@ -237,7 +241,7 @@ test("divide", () => {
         N: dimensions1.N - dimensions2.N,
         J: dimensions1.J - dimensions2.J
     };
-    const unitAB: Unit = new Unit(`${unitSymbol1}/${unitSymbol2}`, `${unitName1}/${unitName2}`, dimensionDiv, coeff1 / coeff2, 0);
+    const unitAB: Unit = new Unit(`${unitSymbol1}/${unitSymbol2}`, `${unitName1}/${unitName2}`, dimensionDiv, base1, coeff1 / coeff2, 0);
 
     expect(unitA.divide(unitB).isEqual(unitAB)).toBe(true);
     expect(unitB.divide(unitA).isEqual(unitAB)).toBe(false);
@@ -251,7 +255,7 @@ test("divide", () => {
 
 test("power", () => {
     const power: number = 3;
-    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, coeff1, offset1);
+    const unitA: Unit = new Unit(unitSymbol1, unitName1, dimensions1, base1, coeff1, offset1);
     const dimensioPow: UnitDimensions = {
         L: dimensions1.L * power,
         M: dimensions1.M * power,
@@ -261,7 +265,7 @@ test("power", () => {
         N: dimensions1.N * power,
         J: dimensions1.J * power
     };
-    const unitApow: Unit = new Unit(`${unitSymbol1}^${power}`, `${unitName1}^${power}`, dimensioPow, coeff1 ** power, 0);
+    const unitApow: Unit = new Unit(`${unitSymbol1}^${power}`, `${unitName1}^${power}`, dimensioPow, base1, coeff1 ** power, 0);
 
     expect(unitA.power(power).isEqual(unitApow)).toBe(true);
     expect(unitA.power(power).isEqual(unitA)).toBe(false);
@@ -274,26 +278,15 @@ test('applyPrefix', () => {
     const unitA: Unit = new Unit('A', 'unit A', {L: 1});
     const unitB: Unit = new Unit(['A', 'B'], unitA.name, unitA.dimensions);
     const prefixk: Prefix = new Prefix('k', 'kilo', 10, 3);
-    const untikA: Unit = new Unit(
-        `${prefixk.symbol}${unitA.preferredUnitSymbol}`,
-        `${prefixk.name}${unitA.name}`,
-        unitA.dimensions,
-        unitA.coeff * prefixk.factor,
-        unitA.offset
-    );
-    untikA._preferredUnitSymbol = null;
-    const untikB: Unit = new Unit(
-        unitB.symbols.map(symbol => `${prefixk.symbol}${symbol}`),
-        `${prefixk.name}${unitB.name}`,
-        unitB.dimensions,
-        unitB.coeff * prefixk.factor,
-        unitB.offset
-    );
+    const untikA: PrefixedUnit = new PrefixedUnit(prefixk, unitA);
+    const untikB: PrefixedUnit = new PrefixedUnit(prefixk, unitB, 'A');
+    const untikB2: PrefixedUnit = new PrefixedUnit(prefixk, unitB);
+    logger.debug(JSON.stringify(unitA.applyPrefix(prefixk)));
+    logger.debug(JSON.stringify(untikA));
     expect(unitA.applyPrefix(prefixk)).toMatchObject(untikA);
     untikA._preferredUnitSymbol = 'A';
     expect(unitA.applyPrefix(prefixk, 'A')).toMatchObject(untikA);
-    expect(unitB.applyPrefix(prefixk, 'A')).toMatchObject(untikA);
-    untikB._preferredUnitSymbol = null;
-    expect(unitB.applyPrefix(prefixk)).toMatchObject(untikB);
+    expect(unitB.applyPrefix(prefixk, 'A')).toMatchObject(untikB);
+    expect(unitB.applyPrefix(prefixk)).toMatchObject(untikB2);
     expect(() => unitB.applyPrefix(prefixk, 'C')).toThrow(ValueError);
 });

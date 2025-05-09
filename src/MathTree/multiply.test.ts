@@ -11,7 +11,7 @@ import { Multiply } from "./multiply";
 import { CompoundUnit } from "@/Unit/compound-unit";
 
 test('constructor', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const aString: StringSymbol = new StringSymbol('A');
     const aSymbol: UnitSymbol = new UnitSymbol(unitA);
     const num5: Numeric = new Numeric(5);
@@ -20,7 +20,7 @@ test('constructor', () => {
 });
 
 test('parseUnits', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 
     UnitParser.registerUnit(unitA);
@@ -35,7 +35,7 @@ test('parseUnits', () => {
 });
 /* */
 test('collapsePair', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const unitB: CompoundUnit = unitA.multiply(unitA);
     const quantityA: Quantity = new Quantity(5, unitA);
     const quantityB: Quantity = new Quantity(-5, unitA);
@@ -70,7 +70,7 @@ test('collapsePair', () => {
 });
 /* */
 test('collapse', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
     const unitB: CompoundUnit = unitA.multiply(unitA);
 

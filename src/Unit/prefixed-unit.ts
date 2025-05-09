@@ -1,17 +1,19 @@
 import { Prefix } from "@/Unit/prefix";
 import { Unit } from "./unit";
-import { UnexpectedError, ValueError } from "@/errors";
+import { PrefixError, UnexpectedError, ValueError } from "@/errors";
 import { AbstractUnit } from "./abstract-unit";
 import { Quantity } from "@/quantity";
 import { CompoundUnit } from "./compound-unit";
+import { AbstractBasedUnit } from "./abstract-based-unit";
 
-export class PrefixedUnit extends AbstractUnit {
+export class PrefixedUnit extends AbstractBasedUnit {
     _prefix: Prefix | null;
     baseUnit: Unit;
 
     constructor(prefix: Prefix, unit: Unit, unitSymbol?: string) {
         super();
         this.baseUnit = unit;
+        this.base = this.baseUnit.base;
         this.dimensions = unit.dimensions;
         this.offset = unit.offset;
 
@@ -41,6 +43,10 @@ export class PrefixedUnit extends AbstractUnit {
     }
 
     set prefix(prefix: Prefix) {
+        if (prefix.base !== this.base) {
+            throw new PrefixError(`Prefix ${prefix.symbol} (base ${prefix.base})does't have the same base as unit ${this.baseUnit.preferredUnitSymbol} (base ${this.base})`);
+        }
+
         this._prefix = prefix;
         const symbols: string[] = this._preferredUnitSymbol ? [`${prefix.symbol}${this._preferredUnitSymbol}`] : this.baseUnit.symbols.map(unitSymbol => `${prefix.symbol}${unitSymbol}`);
 

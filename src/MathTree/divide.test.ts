@@ -13,7 +13,7 @@ import { CompoundUnit } from "@/Unit/compound-unit";
 
 
 test('constructor', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const aString: StringSymbol = new StringSymbol('A');
     const aSymbol: UnitSymbol = new UnitSymbol(unitA);
     const num5: Numeric = new Numeric(5);
@@ -24,7 +24,7 @@ test('constructor', () => {
 });
 
 test('parseUnits', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 
     UnitParser.registerUnit(unitA);
@@ -41,8 +41,8 @@ test('parseUnits', () => {
 });
 
 test('collapse', () => {
-    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 2, 1);
-    const unitC: Unit = new Unit('C', 'unit C', {M: 1}, 2, 1);
+    const unitA: Unit = new Unit('A', 'unit A', {L: 1}, 10, 2, 1);
+    const unitC: Unit = new Unit('C', 'unit C', {M: 1}, 10, 2, 1);
     const unitAC: CompoundUnit = unitA.divide(unitC);
 
     const quantityB: Quantity = new Quantity(-5, unitA);
