@@ -6,8 +6,8 @@ import { Prefix } from "./Unit/prefix";
 import { UnitNotFoundError } from "./errors";
 import { AbstractUnit } from "./Unit/abstract-unit";
 
-const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1, 0); // eslint-disable-line camelcase
-const unit_kg: Unit = new Unit('kg', 'kilogramme', {M: 1}, 10, 1e3, 0); // eslint-disable-line camelcase
+const unit_g: Unit = new Unit('g', 'gramme', { M: 1 }, 10, 1, 0); // eslint-disable-line camelcase
+const unit_kg: Unit = new Unit('kg', 'kilogramme', { M: 1 }, 10, 1e3, 0); // eslint-disable-line camelcase
 const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2); // eslint-disable-line camelcase
 
 const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
@@ -46,24 +46,21 @@ test('registerPrefix - valid registration', () => {
 });
 
 test('registerUnit - unit in use', () => {
-    let expectedMessage: string;
-    expectedMessage = `UnitConverter: Unit symbol g already in use. Couldn't register unit gramme.`;
+    const expectedMessage: string = `UnitConverter: Unit symbol g already in use. Couldn't register unit gramme.`;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_g);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });
 
 test('registerPrefix - prefix in use', () => {
-    let expectedMessage: string;
-    expectedMessage = `UnitConverter: Prefix symbol k already in use. Couldn't register prefix kilo.`;
+    const expectedMessage: string = `UnitConverter: Prefix symbol k already in use. Couldn't register prefix kilo.`;
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerPrefix(prefix_k);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });
 
 test('registerUnit - Already parses', () => {
-    let expectedMessage: string;
-    expectedMessage = `UnitConverter: kilogramme's symbol kg is conflicting with unit kilogramme and being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: kilogramme's symbol kg is conflicting with unit kilogramme and being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_kg);
@@ -71,8 +68,7 @@ test('registerUnit - Already parses', () => {
 });
 
 test('registerPrefix - Already parses', () => {
-    let expectedMessage: string;
-    expectedMessage = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
@@ -80,8 +76,7 @@ test('registerPrefix - Already parses', () => {
 });
 
 test('registerUnit - Creates unit/prefix conflict', () => {
-    let expectedMessage: string;
-    expectedMessage = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work.`;
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_g);
@@ -92,11 +87,11 @@ test('parseUnit - valid parse', () => {
     let expectedUnit: AbstractUnit;
     // Simple unit
     UnitParser.registerUnit(unit_g);
-    expectedUnit = unit_g;
+    expectedUnit = unit_g; // eslint-disable-line camelcase
     expect(UnitParser.parseUnit('g').isEqual(expectedUnit)).toBe(true);
     // Simple unit with prefix
     UnitParser.registerPrefix(prefix_k);
-    expectedUnit = unit_g.applyPrefix(prefix_k, 'g');
+    expectedUnit = unit_g.applyPrefix(prefix_k, 'g'); // eslint-disable-line camelcase
     expect(UnitParser.parseUnit('kg').isEqual(expectedUnit)).toBe(true);
 });
 
@@ -109,7 +104,6 @@ test('parseUnit - invalid parse', () => {
 });
 
 test('findBestPrefixFromExponent', () => {
-
     // TODO more completely test it
     const prefix_M: Prefix = new Prefix('M', 'mega', 10, 6); // eslint-disable-line camelcase
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
@@ -137,7 +131,6 @@ test('findBestPrefixFromExponent', () => {
 });
 
 test('findNextPrefixFromExponent', () => {
-
     // TODO more completely test it
     const prefix_M: Prefix = new Prefix('M', 'mega', 10, 6); // eslint-disable-line camelcase
     const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase

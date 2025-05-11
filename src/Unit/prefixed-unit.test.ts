@@ -15,8 +15,8 @@ const unitSymbol2: string = "uB";
 const unitName1: string = "unit A";
 const unitName2: string = "unit B";
 
-const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
-const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0};
+const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, D: 0, A: 0 };
+const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0, D: 0, A: 0 };
 
 const base1: number = 10;
 const base2: number = 10;

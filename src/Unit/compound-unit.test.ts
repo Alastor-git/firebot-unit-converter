@@ -41,7 +41,7 @@ UnitParser.registerUnit(unitC);
 test('constructor', () => {
     // Test simple unit
     const unittA: CompoundUnit = new CompoundUnit(unitL);
-    expect(unittA).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittA).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittA).toHaveProperty('coeff', 1e-3);
     expect(unittA).toHaveProperty('offset', 0);
     expect(unittA).toHaveProperty('components',
@@ -60,7 +60,7 @@ test('constructor', () => {
     // Test prefixed unit
     const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
     const unittB: CompoundUnit = new CompoundUnit(unitmL);
-    expect(unittB).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittB).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittB).toHaveProperty('coeff', 1e-6);
     expect(unittB).toHaveProperty('offset', 0);
     expect(unittB).toHaveProperty('components',
@@ -79,7 +79,7 @@ test('constructor', () => {
     // Same with offset
     const unitmC: PrefixedUnit = new PrefixedUnit(prefixm, unitC);
     const unittC: CompoundUnit = new CompoundUnit(unitmC);
-    expect(unittC).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 1, N: 0, J: 0});
+    expect(unittC).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 1, N: 0, J: 0, A: 0, D: 0 });
     expect(unittC).toHaveProperty('coeff', 1e-3);
     expect(unittC).toHaveProperty('offset', 273.15);
     expect(unittC).toHaveProperty('components',
@@ -97,7 +97,7 @@ test('constructor', () => {
     expect(unittC.preferredSymbol).toBe('m°C');
     // Test exponent on simple unit
     const unittD: CompoundUnit = new CompoundUnit(unitL, 3);
-    expect(unittD).toHaveProperty('dimensions', { L: 9, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittD).toHaveProperty('dimensions', { L: 9, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittD).toHaveProperty('coeff', 1e-9);
     expect(unittD).toHaveProperty('offset', 0);
     expect(unittD).toHaveProperty('components',
@@ -115,7 +115,7 @@ test('constructor', () => {
     expect(unittD.preferredSymbol).toBe('L^3');
     // Test exponent on prefixed unit
     const unittE: CompoundUnit = new CompoundUnit(unitmL, 3);
-    expect(unittE).toHaveProperty('dimensions', { L: 9, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittE).toHaveProperty('dimensions', { L: 9, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittE).toHaveProperty('coeff', 1e-18);
     expect(unittE).toHaveProperty('offset', 0);
     expect(unittE).toHaveProperty('components',
@@ -133,7 +133,7 @@ test('constructor', () => {
     expect(unittE.preferredSymbol).toBe('mL^3');
     // Test 0 exponent
     const unittF: CompoundUnit = new CompoundUnit(unitmL, 0);
-    expect(unittF).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittF).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittF).toHaveProperty('coeff', 1);
     expect(unittF).toHaveProperty('offset', 0);
     expect(unittF).toHaveProperty('components', {});
@@ -143,7 +143,7 @@ test('constructor', () => {
     expect(unittF.preferredSymbol).toBe('');
     // Test null unit
     const unittG: CompoundUnit = new CompoundUnit(null, 1);
-    expect(unittG).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittG).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittG).toHaveProperty('coeff', 1);
     expect(unittG).toHaveProperty('offset', 0);
     expect(unittG).toHaveProperty('components', {});
@@ -163,7 +163,7 @@ test('addFactor', () => {
     const unitmm: PrefixedUnit = new PrefixedUnit(prefixm, unitm);
     const unitkg: PrefixedUnit = new PrefixedUnit(prefixk, unitg);
     const unittA: CompoundUnit = new CompoundUnit(unitmm).addFactor(unitkg);
-    expect(unittA).toHaveProperty('dimensions', { L: 1, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittA).toHaveProperty('dimensions', { L: 1, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittA).toHaveProperty('coeff', 1e-3);// g has a coeff of 1e-3
     expect(unittA).toHaveProperty('offset', 0);
     expect(unittA).toHaveProperty('components',
@@ -188,7 +188,7 @@ test('addFactor', () => {
     // Same units cancel prefixes: mm * km = m^2
     const unitkm: PrefixedUnit = new PrefixedUnit(prefixk, unitm);
     const unittB: CompoundUnit = new CompoundUnit(unitmm).addFactor(unitkm);
-    expect(unittB).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittB).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittB).toHaveProperty('coeff', 1);
     expect(unittB).toHaveProperty('offset', 0);
     expect(unittB).toHaveProperty('components',
@@ -208,7 +208,7 @@ test('addFactor', () => {
     const unitµm: PrefixedUnit = new PrefixedUnit(prefixµ, unitm);
     const unithm: PrefixedUnit = new PrefixedUnit(prefixh, unitm);
     const unittC: CompoundUnit = new CompoundUnit(unitµm).addFactor(unithm);
-    expect(unittC).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittC).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittC.coeff).toBeCloseTo(1e-4);// Due to float error
     expect(unittC).toHaveProperty('offset', 0);
     expect(unittC).toHaveProperty('components',
@@ -228,7 +228,7 @@ test('addFactor', () => {
     const unitmg: PrefixedUnit = new PrefixedUnit(prefixm, unitg);
     const unitdg: PrefixedUnit = new PrefixedUnit(prefixd, unitg);
     const unittD: CompoundUnit = new CompoundUnit(unitL).addFactor(unitmg).addFactor(unitdg, -1);
-    expect(unittD).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittD).toHaveProperty('dimensions', { L: 3, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittD.coeff).toBeCloseTo(1e-7);// Due to float errors
     expect(unittD).toHaveProperty('offset', 0);
     expect(unittD).toHaveProperty('components',
@@ -255,7 +255,7 @@ test('addFactor', () => {
     const unitmL: PrefixedUnit = new PrefixedUnit(prefixm, unitL);
     const unitcg: PrefixedUnit = new PrefixedUnit(prefixc, unitg);
     const unittE: CompoundUnit = new CompoundUnit(unitMm).addFactor(unitmL).addFactor(unitcg).addFactor(unitg, -1);
-    expect(unittE).toHaveProperty('dimensions', { L: 4, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittE).toHaveProperty('dimensions', { L: 4, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittE.coeff).toBeCloseTo(1e-2);// Due to float errors
     expect(unittE).toHaveProperty('offset', 0);
     expect(unittE).toHaveProperty('components',
@@ -285,7 +285,7 @@ test('addFactor', () => {
     expect(unittE.preferredSymbol).toBe('km*cL');
     // Downgrade a prefix and upgrade another on a unit with exponent : Mm^2 * mL * cg/g = km^2 * daL
     const unittF: CompoundUnit = new CompoundUnit(unitMm, 2).addFactor(unitmL).addFactor(unitcg).addFactor(unitg, -1);
-    expect(unittF).toHaveProperty('dimensions', { L: 5, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittF).toHaveProperty('dimensions', { L: 5, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittF.coeff).toBeCloseTo(1e4);// Due to float errors
     expect(unittF).toHaveProperty('offset', 0);
     expect(unittF).toHaveProperty('components',
@@ -318,7 +318,7 @@ test('addFactor', () => {
     const unitdam: PrefixedUnit = new PrefixedUnit(prefixda, unitm);
     const unithg: PrefixedUnit = new PrefixedUnit(prefixh, unitg);
     const unittG: CompoundUnit = new CompoundUnit(unitdam).addFactor(unithg).addFactor(unitdm).addFactor(unitmg, -1).addFactor(unitmL, -1);
-    expect(unittG).toHaveProperty('dimensions', { L: -1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittG).toHaveProperty('dimensions', { L: -1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittG.coeff).toBeCloseTo(1e11);// Due to float errors
     expect(unittG).toHaveProperty('offset', 0);
     expect(unittG).toHaveProperty('components',
@@ -348,7 +348,7 @@ test('addFactor', () => {
     expect(unittG.preferredSymbol).toBe('km^2*cL^-1');
     // Mm * dam = 10 km^2 : We don't have a choice but to keep separate powers
     const unittH: CompoundUnit = new CompoundUnit(unitMm).addFactor(unitdam);
-    expect(unittH).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittH).toHaveProperty('dimensions', { L: 2, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittH.coeff).toBeCloseTo(1e7);// Due to float errors
     expect(unittH).toHaveProperty('offset', 0);
     expect(unittH).toHaveProperty('components',
@@ -366,7 +366,7 @@ test('addFactor', () => {
     expect(unittH.preferredSymbol).toBe('Mm*dam');
     // cg / g = 0.01: We don't have a choice but to keep a ratio of units
     const unittI: CompoundUnit = new CompoundUnit(unitcg).addFactor(unitg, -1);
-    expect(unittI).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittI).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittI.coeff).toBeCloseTo(1e-2);// Due to float errors
     expect(unittI).toHaveProperty('offset', 0);
     expect(unittI).toHaveProperty('components',
@@ -386,7 +386,7 @@ test('addFactor', () => {
     const unitMg: PrefixedUnit = new PrefixedUnit(prefixM, unitg);
     const unitdag: PrefixedUnit = new PrefixedUnit(prefixda, unitg);
     const unittJ: CompoundUnit = new CompoundUnit(unitMg).addFactor(unitdag, -1);
-    expect(unittJ).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(unittJ).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittJ.coeff).toBeCloseTo(1e5);// Due to float errors
     expect(unittJ).toHaveProperty('offset', 0);
     expect(unittJ).toHaveProperty('components',

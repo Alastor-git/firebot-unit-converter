@@ -13,8 +13,8 @@ const unitSymbol2: string = "uB";
 const unitName1: string = "unit A";
 const unitName2: string = "unit B";
 
-const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0};
-const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0};
+const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 };
+const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 };
 
 const base1: number = 10;
 const base2: number = 10;
@@ -42,20 +42,20 @@ test("Constructor", () => {
     testObject = new Unit('a', 'b');
     expect(testObject).toHaveProperty('symbols', ['a']);
     expect(testObject).toHaveProperty('name', 'b');
-    expect(testObject).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0});
+    expect(testObject).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(testObject).toHaveProperty('coeff', 1);
     expect(testObject).toHaveProperty('offset', 0);
 
-    testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 10, 8, 9);
+    testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7, D: 8, A: 9 }, 10, 8, 9);
     expect(testObject).toHaveProperty('symbols', ['a']);
     expect(testObject).toHaveProperty('name', 'b');
-    expect(testObject).toHaveProperty('dimensions', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7});
+    expect(testObject).toHaveProperty('dimensions', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7, D: 8, A: 9 });
     expect(testObject).toHaveProperty('coeff', 8);
     expect(testObject).toHaveProperty('offset', 9);
 });
 
 test('copy', () => {
-    const testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7}, 10, 8, 9);
+    const testObject = new Unit('a', 'b', { L: 1, M: 2, T: 3, I: 4, THETA: 5, N: 6, J: 7, D: 8, A: 9 }, 10, 8, 9);
     const testObjectCopy = testObject.copy();
     expect(testObjectCopy).toMatchObject(testObject);
     testObjectCopy.dimensions.L += 1;
@@ -143,19 +143,23 @@ test("isDimensionless", () => {
     expect(unit.isDimensionless()).toBe(true);
     unit = new Unit('a', 'a', {}, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(true);
-    unit = new Unit('a', 'a', {L: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { L: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {M: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { M: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {T: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { T: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {I: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { I: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {THETA: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { THETA: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {N: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { N: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
-    unit = new Unit('a', 'a', {J: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { J: 1 }, 10, coeff1, offset1);
+    expect(unit.isDimensionless()).toBe(false);
+    unit = new Unit('a', 'a', { D: 1 }, 10, coeff1, offset1);
+    expect(unit.isDimensionless()).toBe(false);
+    unit = new Unit('a', 'a', { A: 1 }, 10, coeff1, offset1);
     expect(unit.isDimensionless()).toBe(false);
 });
 
@@ -167,19 +171,23 @@ test("isNeutralElement", () => {
     expect(unit.isNeutralElement()).toBe(false);
     unit = new Unit('a', 'a', {}, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {L: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { L: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {M: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { M: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {T: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { T: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {I: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { I: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {THETA: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { THETA: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {N: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { N: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
-    unit = new Unit('a', 'a', {J: 1}, 10, coeff1, offset1);
+    unit = new Unit('a', 'a', { J: 1 }, 10, coeff1, offset1);
+    expect(unit.isNeutralElement()).toBe(false);
+    unit = new Unit('a', 'a', { D: 1 }, 10, coeff1, offset1);
+    expect(unit.isNeutralElement()).toBe(false);
+    unit = new Unit('a', 'a', { A: 1 }, 10, coeff1, offset1);
     expect(unit.isNeutralElement()).toBe(false);
 });
 
