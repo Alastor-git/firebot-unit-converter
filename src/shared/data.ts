@@ -31,15 +31,15 @@ export const UNITS = [
     new Unit('Wb', 'weber', { M: 1, L: 2, T: -2, I: -1 }),
     new Unit('H', 'henry', { M: 1, L: 2, T: -2, I: -2 }),
     new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15),
-    new Unit('rad', 'radian'),
-    new Unit('sr', 'steradian'),
+    new Unit('rad', 'radian', { A: 1 }),
+    new Unit('sr', 'steradian', { A: 1 }),
     new Unit('lm', 'lumen', { J: 1 }),
     new Unit('lx', 'lux', { L: -2, J: 1 }),
     new Unit('Bq', 'becquerel', { T: -1 }),
     new Unit('Gy', 'gray', { L: 2, T: -2 }),
     new Unit('Sv', 'sievert', { L: 2, T: -2 }),
     new Unit('kat', 'katal', { T: -1, N: 1 }),
-    new Unit('L', 'Liter', {L: 3}, 10, 1e-3),
+    new Unit('L', 'Liter', { L: 3 }, 10, 1e-3),
     // -----------------
     // Imperial system
     // -----------------
@@ -62,5 +62,5 @@ export const UNITS = [
     new Unit('bar', 'bar', { M: 1, L: -1, T: -2 }, 10, 1e5),
     new Unit('min', 'minute', { T: 1 }, 10, 60),
     new Unit('h', 'hour', { T: 1 }, 10, 3600),
-    new Unit('b', 'byte', { }, 2)
+    new Unit('b', 'byte', { D: 1 }, 2)
 ];

@@ -10,7 +10,8 @@ export type UnitDimensions = {
     THETA: number; // Thermodynamic temperature
     N: number; //     Amount of substance
     J: number; //     Light intensity
-    // TODO: unit of angle even though it's not a physical unit ?
+    A: number; //     Angle
+    D: number; //     Data
 };
 
 export abstract class AbstractUnit {

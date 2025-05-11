@@ -30,7 +30,9 @@ export class Unit extends AbstractBasedUnit {
             I: dimensions.I ?? 0,
             THETA: dimensions.THETA ?? 0,
             N: dimensions.N ?? 0,
-            J: dimensions.J ?? 0
+            J: dimensions.J ?? 0,
+            A: dimensions.A ?? 0,
+            D: dimensions.D ?? 0
         };
 
         this.coeff = coeff;

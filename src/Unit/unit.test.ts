@@ -13,8 +13,8 @@ const unitSymbol2: string = "uB";
 const unitName1: string = "unit A";
 const unitName2: string = "unit B";
 
-const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
-const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0};
+const dimensions1: UnitDimensions = { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0};
+const dimensions2: UnitDimensions = { L: 0, M: 1, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0};
 
 const base1: number = 10;
 const base2: number = 10;
@@ -214,7 +214,9 @@ test("multiply", () => {
         I: dimensions1.I + dimensions2.I,
         THETA: dimensions1.THETA + dimensions2.THETA,
         N: dimensions1.N + dimensions2.N,
-        J: dimensions1.J + dimensions2.J
+        J: dimensions1.J + dimensions2.J,
+        A: dimensions1.A + dimensions2.A,
+        D: dimensions1.D + dimensions2.D
     };
     const unitAB: Unit = new Unit(`${unitSymbol1}*${unitSymbol2}`, `${unitName1}*${unitName2}`, dimensionMult, base1, coeff1 * coeff2, 0);
 
@@ -239,7 +241,9 @@ test("divide", () => {
         I: dimensions1.I - dimensions2.I,
         THETA: dimensions1.THETA - dimensions2.THETA,
         N: dimensions1.N - dimensions2.N,
-        J: dimensions1.J - dimensions2.J
+        J: dimensions1.J - dimensions2.J,
+        A: dimensions1.A - dimensions2.A,
+        D: dimensions1.D - dimensions2.D
     };
     const unitAB: Unit = new Unit(`${unitSymbol1}/${unitSymbol2}`, `${unitName1}/${unitName2}`, dimensionDiv, base1, coeff1 / coeff2, 0);
 
@@ -263,7 +267,9 @@ test("power", () => {
         I: dimensions1.I * power,
         THETA: dimensions1.THETA * power,
         N: dimensions1.N * power,
-        J: dimensions1.J * power
+        J: dimensions1.J * power,
+        A: dimensions1.A * power,
+        D: dimensions1.D * power
     };
     const unitApow: Unit = new Unit(`${unitSymbol1}^${power}`, `${unitName1}^${power}`, dimensioPow, base1, coeff1 ** power, 0);
 

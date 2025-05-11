@@ -1,6 +1,6 @@
 import { Prefix } from "@/Unit/prefix";
 import { Unit } from "./unit";
-import { PrefixError, UnexpectedError, ValueError } from "@/errors";
+import { PrefixError, ValueError } from "@/errors";
 import { AbstractUnit } from "./abstract-unit";
 import { Quantity } from "@/quantity";
 import { CompoundUnit } from "./compound-unit";

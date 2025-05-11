@@ -111,7 +111,7 @@ export class CompoundUnit extends AbstractUnit {
     updateUnit() {
         let firstComponent: boolean = true;
         // Initialize values that we recalculate
-        this.dimensions = { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0};
+        this.dimensions = { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0};
         this.coeff = 1;
         this.offset = 0;
         // Update dimensions and total coefficient
