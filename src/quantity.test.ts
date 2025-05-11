@@ -147,36 +147,7 @@ test('oppose', () => {
     expect(Quantity.zero().oppose().isEqual(Quantity.zero())).toBe(true);
     expect(Quantity.zero(unitA).oppose().isEqual(Quantity.zero(unitA))).toBe(true);
 });
-/*
-test("subtract", () => {
-    const quantityA: Quantity = new Quantity(value1, unitA);
-    const quantityB: Quantity = new Quantity(value2, unitA);
-    const quantityC: Quantity = new Quantity(value1 - value2, unitA);
-    const unitC: Unit = new Unit('t', 't', unitA.dimensions, 10, unitA.coeff * 2, unitA.offset);
-    const quantityD: Quantity = quantityA.convert(unitC);
-    const quantityE: Quantity = new Quantity(value2, unitB);
-    const quantityF: Quantity = new Quantity(-value1, unitA);
-    const quantityG: Quantity = quantityF.convert(unitC);
 
-    expect(quantityA.subtract(quantityB).isEqual(quantityC)).toBe(true);
-    expect(quantityB.subtract(quantityA).isEqual(quantityC)).toBe(false);
-    expect(quantityA.subtract(quantityB).add(quantityB).isEqual(quantityA)).toBe(true);
-
-    expect(quantityA.subtract(quantityA).isEqual(Quantity.zero(unitA))).toBe(true);
-
-    expect(quantityA.subtract(Quantity.zero(unitA)).isEqual(quantityA)).toBe(true);
-    expect(quantityA.subtract(Quantity.zero(unitA)).isDeltaEqual(quantityA)).toBe(true);
-    expect(Quantity.zero(unitA).subtract(quantityA).isEqual(quantityF)).toBe(true);
-    expect(Quantity.zero(unitA).subtract(quantityA).isDeltaEqual(quantityF)).toBe(true);
-
-    expect(Quantity.zero(unitA).subtract(quantityD).isEqual(quantityG)).toBe(false);
-    expect(Quantity.zero(unitA).subtract(quantityD).isEqual(quantityF)).toBe(true);
-    expect(Quantity.zero(unitA).subtract(quantityD).isDeltaEqual(quantityF)).toBe(true);
-    expect(Quantity.zero(unitA).subtract(quantityD).isEquivalent(quantityG)).toBe(true);
-
-    expect(() => quantityA.subtract(quantityE)).toThrow(UnitMismatchError);
-});
-*/
 test("multiply", () => {
     const unitC: CompoundUnit = unitA.multiply(unitB);
     const quantityA: Quantity = new Quantity(value1, unitA);
