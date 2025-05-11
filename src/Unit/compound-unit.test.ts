@@ -32,12 +32,7 @@ const unitg: Unit = new Unit('g', 'gram', { M: 1 }, 10, 1e-3);
 const unitC: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15);
 const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9);
 const unitin: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2);
-/* Strictly speaking, I don't think we need to register the units for this
-UnitParser.registerUnit(unitL);
-UnitParser.registerUnit(unitm);
-UnitParser.registerUnit(unitg);
-UnitParser.registerUnit(unitC);
-*/
+
 test('constructor', () => {
     // Test simple unit
     const unittA: CompoundUnit = new CompoundUnit(unitL);
