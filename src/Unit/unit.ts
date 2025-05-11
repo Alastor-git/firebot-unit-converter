@@ -51,7 +51,7 @@ export class Unit extends AbstractBasedUnit {
     static ONE: Unit = new Unit('', '', {}, 1, 1, 0);
 
     isNeutralElement(): boolean {
-        return this.isEqual(Unit.ONE);
+        return this.isDimensionless() && this.isLinear() && this.coeff === 1;
     }
 
     deltaUnit(): Unit {
