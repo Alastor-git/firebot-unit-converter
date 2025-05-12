@@ -36,6 +36,10 @@ export class UnitParser {
         });
     }
 
+    static unregisterUnits(): void {
+        UnitParser.registeredUnits = {};
+    }
+
     static registerPrefix(prefix: Prefix): void {
         if (prefix.symbol in UnitParser.registeredPrefixes) {
             logger.warn(`UnitConverter: Prefix symbol ${prefix.symbol} already in use. Couldn't register prefix ${prefix.name}.`);
@@ -52,6 +56,10 @@ export class UnitParser {
             }
         }
         UnitParser.registeredPrefixes[prefix.symbol] = prefix;
+    }
+
+    static unregisterPrefixes(): void {
+        UnitParser.registeredPrefixes = {};
     }
 
     static parseUnit(candidate: string): AbstractUnit {

@@ -1,14 +1,19 @@
 import {
     Firebot
 } from "@crowbartools/firebot-custom-scripts-types";
-// import { AllUnitConverterEffects } from "./effects";
+import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
+import * as AllUnitConverterVariables from "./variables";
+//import { AllUnitConverterVariables } from "./variables";
 
 import {
     logger,
-    initModules
+    initModules,
+    variableManager
 } from "@shared/firebot-modules";
 
 import * as packageInfo from "../package.json";
+import { PREFIXES, UNITS } from "./shared/data";
+import { UnitParser } from "./unit-parser";
 
 const script: Firebot.CustomScript = {
     getScriptManifest: () => {
@@ -27,18 +32,33 @@ const script: Firebot.CustomScript = {
         initModules(modules);
         logger.info("Loading Unit Converter...");
 
-        // Register Effects
-        /*for (const effect of AllUnitConverterEffects) {
-        effect.definition.id = `${namespace}:${effect.definition.id}`;
+        // Register units
+        logger.info("Loading units");
+        UNITS.forEach((unit) => {
+            UnitParser.registerUnit(unit);
+        });
 
-        effectManager.registerEffect(
-            effect as Effects.EffectType<{ [key: string]: any }>
-        );
-        }*/
+        // Register prefixes
+        logger.info("Loading prefixes");
+        PREFIXES.forEach((prefix) => {
+            UnitParser.registerPrefix(prefix);
+        });
+
+        // Register ReplaceVariables
+        logger.info("Loading variables");
+        for (const variable of Object.values(AllUnitConverterVariables)) {
+            variableManager.registerReplaceVariable(variable);
+        }
+
         logger.info("Unit Converter loaded");
     },
     stop: () => {
         logger.info("Unloading Unit Converter...");
+
+        logger.info("Unloading units");
+        UnitParser.unregisterUnits();
+        logger.info("Unloading prefixes");
+        UnitParser.unregisterPrefixes();
 
         logger.info("Unit Converter unloaded");
     }

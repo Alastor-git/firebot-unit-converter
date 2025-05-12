@@ -52,7 +52,9 @@ export abstract class AbstractUnit {
                 this.dimensions.I === otherUnit.dimensions.I &&
                 this.dimensions.THETA === otherUnit.dimensions.THETA &&
                 this.dimensions.N === otherUnit.dimensions.N &&
-                this.dimensions.J === otherUnit.dimensions.J);
+                this.dimensions.J === otherUnit.dimensions.J &&
+                this.dimensions.D === otherUnit.dimensions.D &&
+                this.dimensions.A === otherUnit.dimensions.A);
     }
 
     isDeltaEqual(otherUnit: AbstractUnit) {
@@ -81,7 +83,9 @@ export abstract class AbstractUnit {
                this.dimensions.M === 0 &&
                this.dimensions.N === 0 &&
                this.dimensions.T === 0 &&
-               this.dimensions.THETA === 0;
+               this.dimensions.THETA === 0 &&
+               this.dimensions.D === 0 &&
+               this.dimensions.A === 0;
     }
 
     abstract copy(): AbstractUnit;
