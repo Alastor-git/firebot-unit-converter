@@ -16,7 +16,7 @@ export const unitMathVariable: ReplaceVariable = {
             },
             {
                 usage: "unitMath[5kg / (3L + 20dL)]",
-                description: `Returns 1 kg/L`
+                description: `Returns 1 kg*L^-1`
             }
         ],
         categories: [VariableCategory.COMMON, VariableCategory.NUMBERS],

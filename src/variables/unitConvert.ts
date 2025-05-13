@@ -7,6 +7,8 @@ import { AbstractUnit } from "@/Unit/abstract-unit";
 import { ValueError } from "@/errors";
 import { Quantity } from "@/quantity";
 import { Unit } from "@/Unit/unit";
+import { UnitParser } from "@/unit-parser";
+import { PrefixedUnit } from "@/Unit/prefixed-unit";
 
 export const unitConvertVariable: ReplaceVariable = {
     definition: {
@@ -20,7 +22,7 @@ export const unitConvertVariable: ReplaceVariable = {
             },
             {
                 usage: "unitConvert[5kg / (3L + 20dL), kg/m^3]",
-                description: `Returns 1000 kg/m^3`
+                description: `Returns 1000 kg*m^-3`
             }
         ],
         categories: [VariableCategory.COMMON, VariableCategory.NUMBERS],
@@ -29,7 +31,7 @@ export const unitConvertVariable: ReplaceVariable = {
     evaluator: function (trigger: Effects.Trigger, subject: string, target: string): string {
         try {
             const parsedSubject = ParseMath.match(subject).parseUnits().collapse();
-            const parsedTarget = ParseMath.match(target).parseUnits().collapse();
+            let parsedTarget = ParseMath.match(target).parseUnits().collapse();
 
             if (!(parsedTarget instanceof AbstractUnit)) {
                 throw new ValueError('The target must be a valid unit.');
@@ -47,9 +49,38 @@ export const unitConvertVariable: ReplaceVariable = {
                 filteredSubject = new Quantity(1, parsedSubject);
             }
 
-            // FIXME: When convertinf from C to F or equivalent, read it as °C and °F
-            const result: Quantity = filteredSubject.convert(parsedTarget);
+            // We convert C to °C and F to °F if :
+            // - Both are either C or F
+            // - Once is C or F and the other one is a temperature unit
+            if (
+                   (['C', 'F'].includes(filteredSubject.unit.preferredUnitSymbol) || filteredSubject.unit.isSameDimension(UnitParser.registeredUnits['K']))
+                && (['C', 'F'].includes(parsedTarget.preferredUnitSymbol) || parsedTarget.isSameDimension(UnitParser.registeredUnits['K']))
+                ) {
+                    let newSubjectUnit: Unit | null = null;
+                    if (filteredSubject.unit.preferredUnitSymbol === 'C') {
+                        newSubjectUnit = UnitParser.registeredUnits['°C'];
+                    } else if (filteredSubject.unit.preferredUnitSymbol === 'F') {
+                        newSubjectUnit = UnitParser.registeredUnits['°F'];
+                    }
+                    let newTargetUnit: Unit | null = null;
+                    if (parsedTarget.preferredUnitSymbol === 'C') {
+                        newTargetUnit = UnitParser.registeredUnits['°C'];
+                    } else if (parsedTarget.preferredUnitSymbol === 'F') {
+                        newTargetUnit = UnitParser.registeredUnits['°F'];
+                    }
 
+                    if (newSubjectUnit !== null && filteredSubject.unit instanceof Unit) {
+                        filteredSubject.unit = newSubjectUnit;
+                    } else if (newSubjectUnit !== null && filteredSubject.unit instanceof PrefixedUnit) {
+                        filteredSubject.unit = new PrefixedUnit(filteredSubject.unit.prefix, newSubjectUnit);
+                    }
+                    if (newTargetUnit !== null && parsedTarget instanceof Unit) {
+                        parsedTarget = newTargetUnit;
+                    } else if (newTargetUnit !== null && parsedTarget instanceof PrefixedUnit) {
+                        parsedTarget = new PrefixedUnit(parsedTarget.prefix, newTargetUnit);
+                    }
+                }
+            const result: Quantity = filteredSubject.convert(parsedTarget);
             if (parsedSubject instanceof AbstractUnit) {
                 return result.unit.toString();
             }
