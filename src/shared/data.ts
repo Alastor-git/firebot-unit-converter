@@ -31,9 +31,9 @@ export const UNITS = [
     new Unit('T', 'tesla', { M: 1, T: -2, I: -1 }),
     new Unit('Wb', 'weber', { M: 1, L: 2, T: -2, I: -1 }),
     new Unit('H', 'henry', { M: 1, L: 2, T: -2, I: -2 }),
-    new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15),
+    new Unit(['°C', '˚C'], 'celsius', { THETA: 1 }, 10, 1, 273.15),
     new Unit('rad', 'radian', { A: 1 }),
-    new Unit('sr', 'steradian', { A: 1 }),
+    new Unit('sr', 'steradian', { A: 2 }),
     new Unit('lm', 'lumen', { J: 1 }),
     new Unit('lx', 'lux', { L: -2, J: 1 }),
     new Unit('Bq', 'becquerel', { T: -1 }),
@@ -44,7 +44,7 @@ export const UNITS = [
     // -----------------
     // Imperial system
     // -----------------
-    new Unit('°F', 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9),
+    new Unit(['°F', '˚F'], 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9),
 
     new Unit('th', 'thou', { L: 1 }, 10, 2.54e-5),
     new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2),
@@ -71,7 +71,8 @@ export const UNITS = [
     new Unit('min', 'minute', { T: 1 }, 10, 60),
     new Unit('h', 'hour', { T: 1 }, 10, 3600),
 
-    new Unit('b', 'byte', { D: 1 }, 2)
+    new Unit('b', 'bit', { D: 1 }, 2),
+    new Unit('B', 'byte', { D: 1 }, 2, 8)
 ];
 
 export const PREFIXES = [
