@@ -1,4 +1,5 @@
 import { ScriptModules } from "@crowbartools/firebot-custom-scripts-types";
+import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
 import { jest } from "@jest/globals";
 
 jest.mock("@shared/firebot-modules", () => ({
@@ -10,6 +11,9 @@ jest.mock("@shared/firebot-modules", () => ({
     },
     integrationManager: {
         getIntegrationById: jest.fn(() => null)
+    },
+    variableManager: {
+        registerReplaceVariable: jest.fn((variable: ReplaceVariable) => null)
     },
     initModules: jest.fn((scriptModules: ScriptModules): void => {})
 }));
