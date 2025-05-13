@@ -7,6 +7,7 @@ import { Unit } from "./Unit/unit";
 import { Prefix } from "./Unit/prefix";
 import { Quantity } from "./quantity";
 import { logger } from "./shared/firebot-modules";
+import { PrefixedUnit } from "./Unit/prefixed-unit";
 
 /* */
 test('makeTree empty', () => {
@@ -735,7 +736,7 @@ test('implicit multiplication', () => {
 });
 /* */
 test('match', () => {
-    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1, 0); // eslint-disable-line camelcase
+    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1e-3, 0); // eslint-disable-line camelcase
     const unit_m: Unit = new Unit('m', 'meter', { L: 1 }, 10); // eslint-disable-line camelcase
     const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2); // eslint-disable-line camelcase
 
@@ -759,3 +760,15 @@ test('match', () => {
     expect(ParseMath.match(`(2km + 3 * 5'' - 5cm) / (6g + 8mg)^(10m/5e3mm+1)`).parseUnits().collapse()).toMatchObject(expected);
 });
 /* */
+test('convert with prefixed unit', () => {
+    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1e-3, 0); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
+
+    UnitParser.registerUnit(unit_g);
+    UnitParser.registerPrefix(prefix_k);
+
+    const subject = ParseMath.match('1e9kg').parseUnits().collapse();
+    const expectedSubject: Quantity = new Quantity(1e9, new PrefixedUnit(prefix_k, unit_g, 'g'));
+    expect(subject).toMatchObject(expectedSubject);
+    expect(subject?.toString()).toBe('1000000000 kg');
+});

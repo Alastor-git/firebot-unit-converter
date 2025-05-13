@@ -1,8 +1,13 @@
+import "@/mocks/firebot-modules";
+import { logger } from "@/shared/firebot-modules";
 import { UnitMismatchError, ValueError } from "./errors";
 import { Quantity } from "./quantity";
 import { UnitDimensions } from "./Unit/abstract-unit";
 import { CompoundUnit } from "./Unit/compound-unit";
+import { Prefix } from "./Unit/prefix";
+import { PrefixedUnit } from "./Unit/prefixed-unit";
 import { Unit } from "./Unit/unit";
+import { UnitParser } from "./unit-parser";
 
 
 const unitSymbol1: string = "uA";
@@ -269,8 +274,19 @@ test('deltaQuantity', () => {
 
 test('toString', () => {
     const unitK: Unit = new Unit('K', 'kelvin', { THETA: 1 }, 10);
+    const unit_g: Unit = new Unit('g', 'gramme', {M: 1}, 10, 1e-3, 0); // eslint-disable-line camelcase
+    const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 
-    const tempValueK: Quantity = new Quantity(334.15, unitK);
+    UnitParser.registerUnit(unit_g);
+    UnitParser.registerUnit(unitK);
+    UnitParser.registerPrefix(prefix_k);
 
-    expect(tempValueK.toString()).toBe('334.15 K');
+    const subject1: Quantity = new Quantity(334.15, unitK);
+    expect(subject1.toString()).toBe('334.15 K');
+
+    const subject2: Quantity = new Quantity(1e9, new PrefixedUnit(prefix_k, unit_g, 'g'));
+    expect(subject2.toString()).toBe('1000000000 kg');
+
+    const subject3: Quantity = new Quantity(1e9, new CompoundUnit(new PrefixedUnit(prefix_k, unit_g, 'g'), 2).addFactor(unitK, -1));
+    expect(subject3.toString()).toBe('1000000000 kg^2*K^-1');
 });

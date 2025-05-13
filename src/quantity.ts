@@ -123,6 +123,6 @@ export class Quantity {
     }
 
     toString(): string {
-        return `${this.value} ${this.unit.preferredUnitSymbol}`;
+        return `${this.value} ${this.unit.preferredSymbol}`;
     }
 }
