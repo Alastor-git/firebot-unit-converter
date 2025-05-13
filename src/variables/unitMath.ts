@@ -3,6 +3,7 @@ import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effect
 import { OutputDataType, VariableCategory } from "@shared/variable-constants";
 import { ParseMath } from "@/math-parser";
 import { logger } from "@/shared/firebot-modules";
+import { UnitConverterError } from "@/errors";
 
 export const unitMathVariable: ReplaceVariable = {
     definition: {
@@ -26,7 +27,10 @@ export const unitMathVariable: ReplaceVariable = {
         try {
             return ParseMath.match(subject).parseUnits().collapse()?.toString() ?? '';
         } catch (err) {
-            if (err instanceof Error) {
+            if (err instanceof UnitConverterError) {
+                logger.debug(err.message);
+                return err.originalMessage;
+            } else if (err instanceof Error) {
                 logger.debug(err.message);
                 return err.message;
             }
