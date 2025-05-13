@@ -4,7 +4,7 @@ import { OutputDataType, VariableCategory } from "@shared/variable-constants";
 import { ParseMath } from "@/math-parser";
 import { logger } from "@/shared/firebot-modules";
 import { AbstractUnit } from "@/Unit/abstract-unit";
-import { ValueError } from "@/errors";
+import { UnitConverterError, ValueError } from "@/errors";
 import { Quantity } from "@/quantity";
 import { Unit } from "@/Unit/unit";
 import { UnitParser } from "@/unit-parser";
@@ -34,10 +34,10 @@ export const unitConvertVariable: ReplaceVariable = {
             let parsedTarget = ParseMath.match(target).parseUnits().collapse();
 
             if (!(parsedTarget instanceof AbstractUnit)) {
-                throw new ValueError('The target must be a valid unit.');
+                throw new ValueError('The target must be a valid unit. ');
             }
             if (parsedSubject === null) {
-                throw new ValueError('Invalid expression to convert.');
+                throw new ValueError('Invalid expression to convert. ');
             }
 
             let filteredSubject: Quantity;
@@ -81,12 +81,12 @@ export const unitConvertVariable: ReplaceVariable = {
                     }
                 }
             const result: Quantity = filteredSubject.convert(parsedTarget);
-            if (parsedSubject instanceof AbstractUnit) {
-                return result.unit.toString();
-            }
-            return result.toString();
+            return `${result.toString()}`;
         } catch (err) {
-            if (err instanceof Error) {
+            if (err instanceof UnitConverterError) {
+                logger.debug(err.message);
+                return err.originalMessage;
+            } else if (err instanceof Error) {
                 logger.debug(err.message);
                 return err.message;
             }

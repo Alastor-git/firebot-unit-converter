@@ -1,9 +1,7 @@
 import {
     Firebot
 } from "@crowbartools/firebot-custom-scripts-types";
-import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
 import * as AllUnitConverterVariables from "./variables";
-//import { AllUnitConverterVariables } from "./variables";
 
 import {
     logger,

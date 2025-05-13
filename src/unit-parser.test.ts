@@ -21,46 +21,46 @@ beforeEach(() => {
 
 test('registerUnit - valid registration', () => {
     let expectedMessage: string;
-    expectedMessage = `UnitConverter: Registering unit gramme under symbol g.`;
+    expectedMessage = `UnitConverter: Registering unit gramme under symbol g. `;
     UnitParser.registerUnit(unit_g);
     expect(logger.info).toHaveBeenLastCalledWith(expectedMessage);
-    expectedMessage = `UnitConverter: Registering unit kilogramme under symbol kg.`;
+    expectedMessage = `UnitConverter: Registering unit kilogramme under symbol kg. `;
     UnitParser.registerUnit(unit_kg);
     expect(logger.info).toHaveBeenLastCalledWith(expectedMessage);
 
     UnitParser.registerUnit(unit_in);
-    expectedMessage = `UnitConverter: Registering unit inch under symbol in.`;
+    expectedMessage = `UnitConverter: Registering unit inch under symbol in. `;
     expect(logger.info).toHaveBeenCalledWith(expectedMessage);
-    expectedMessage = `UnitConverter: Registering unit inch under symbol ''.`;
+    expectedMessage = `UnitConverter: Registering unit inch under symbol ''. `;
     expect(logger.info).toHaveBeenCalledWith(expectedMessage);
 });
 
 test('registerPrefix - valid registration', () => {
     let expectedMessage: string;
-    expectedMessage = `UnitConverter: Registering prefix kilo under symbol k.`;
+    expectedMessage = `UnitConverter: Registering prefix kilo under symbol k. `;
     UnitParser.registerPrefix(prefix_k);
     expect(logger.info).toHaveBeenLastCalledWith(expectedMessage);
-    expectedMessage = `UnitConverter: Registering prefix mili under symbol m.`;
+    expectedMessage = `UnitConverter: Registering prefix mili under symbol m. `;
     UnitParser.registerPrefix(prefix_m);
     expect(logger.info).toHaveBeenLastCalledWith(expectedMessage);
 });
 
 test('registerUnit - unit in use', () => {
-    const expectedMessage: string = `UnitConverter: Unit symbol g already in use. Couldn't register unit gramme.`;
+    const expectedMessage: string = `UnitConverter: Unit symbol g already in use. Couldn't register unit gramme. `;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_g);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });
 
 test('registerPrefix - prefix in use', () => {
-    const expectedMessage: string = `UnitConverter: Prefix symbol k already in use. Couldn't register prefix kilo.`;
+    const expectedMessage: string = `UnitConverter: Prefix symbol k already in use. Couldn't register prefix kilo. `;
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerPrefix(prefix_k);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });
 
 test('registerUnit - Already parses', () => {
-    const expectedMessage: string = `UnitConverter: kilogramme's symbol kg is conflicting with unit kilogramme and being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: kilogramme's symbol kg is conflicting with unit kilogramme and being parsed as kg. One of them isn't gonna work. `;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_kg);
@@ -68,7 +68,7 @@ test('registerUnit - Already parses', () => {
 });
 
 test('registerPrefix - Already parses', () => {
-    const expectedMessage: string = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: Prefix kilo's symbol k is creating a conflict between units gramme and kilogramme. kg is being parsed as kg. One of them isn't gonna work. `;
     UnitParser.registerUnit(unit_g);
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
@@ -76,7 +76,7 @@ test('registerPrefix - Already parses', () => {
 });
 
 test('registerUnit - Creates unit/prefix conflict', () => {
-    const expectedMessage: string = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work.`;
+    const expectedMessage: string = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work. `;
     UnitParser.registerUnit(unit_kg);
     UnitParser.registerPrefix(prefix_k);
     UnitParser.registerUnit(unit_g);

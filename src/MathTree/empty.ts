@@ -11,6 +11,6 @@ export class Empty extends MathTree {
     }
 
     collapse(): null {
-        throw new ValueError(`Empty group cannot be turned into a value.`);
+        throw new ValueError(`Empty group cannot be turned into a value. `);
     }
 }

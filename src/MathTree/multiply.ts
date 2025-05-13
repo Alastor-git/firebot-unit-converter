@@ -22,7 +22,7 @@ export class Multiply extends MathTree {
     static collapsePair(totalValue: AbstractUnit | Quantity | number | null, newFactor: MathTree): AbstractUnit | Quantity | number {
         const newFactorValue = newFactor.collapse();
         if (newFactorValue === null) {
-            throw new ValueError(`Cannot multiply an empty group.`);
+            throw new ValueError(`Cannot multiply an empty group. `);
         } else if (totalValue === null) {
             return newFactorValue;
         } else if (totalValue instanceof Quantity) {

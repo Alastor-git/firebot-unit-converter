@@ -28,7 +28,7 @@ export abstract class AbstractUnit {
 
     set preferredUnitSymbol(unitSymbol: string) {
         if (!this.symbols.includes(unitSymbol)) {
-            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}`);
+            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}. `);
         }
 
         this._preferredUnitSymbol = unitSymbol;
@@ -36,7 +36,7 @@ export abstract class AbstractUnit {
 
     get preferredUnitSymbol(): string {
         if (this._preferredUnitSymbol === null) {
-            throw new ValueError(`Unit preferred symbol has not been defined.`);
+            throw new ValueError(`Unit preferred symbol has not been defined. `);
         }
         return this._preferredUnitSymbol;
     }

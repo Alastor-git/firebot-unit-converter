@@ -1,7 +1,7 @@
 import "@/mocks/firebot-modules";
 import { UnitParser } from "./unit-parser";
 import { ParseMath } from "./math-parser";
-import { DelimiterError, DepthLimitExceededError, InvalidOperation } from "./errors";
+import { DelimiterError, DepthLimitExceededError, InvalidOperationError } from "./errors";
 import { MathTree, Empty, StringSymbol, Numeric, Add, Oppose, Multiply, Divide, Power } from './MathTree';
 import { Unit } from "./Unit/unit";
 import { Prefix } from "./Unit/prefix";
@@ -24,7 +24,7 @@ test('makeTree single token', () => {
 test('makeTree single group', () => {
     let subGroup: MathTree;
     subGroup = new Empty();
-    expect(() => ParseMath.makeTree([subGroup])).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree([subGroup])).toThrow(InvalidOperationError);
     subGroup = new Add(new StringSymbol('a'), new StringSymbol('b'));
     expect(ParseMath.makeTree([subGroup])).toMatchObject(subGroup);
     subGroup = new Oppose(new StringSymbol('a'));
@@ -165,48 +165,48 @@ test('makeTree sequences of operators', () => {
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     input = [aString, caretString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, caretString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, caretString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, caretString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, caretString, plusString, bString];
     expected = new Power(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     input = [aString, slashString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, slashString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, slashString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, slashString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, slashString, plusString, bString];
     expected = new Divide(aString, bString);
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     input = [aString, starString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, starString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, starString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, starString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, spaceString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, spaceString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, spaceString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, spaceString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, starString, plusString, bString];
     expected = new Multiply(aString, bString);
@@ -216,13 +216,13 @@ test('makeTree sequences of operators', () => {
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     input = [aString, minusString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, minusString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, minusString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, minusString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, minusString, minusString, bString];
     expected = new Add(aString, bString);
@@ -233,13 +233,13 @@ test('makeTree sequences of operators', () => {
     expect(ParseMath.makeTree(input)).toMatchObject(expected);
 
     input = [aString, plusString, starString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, plusString, spaceString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, plusString, slashString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, plusString, caretString, bString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 
     input = [aString, plusString, plusString, bString];
     expected = new Add(aString, bString);
@@ -345,13 +345,13 @@ test('makeTree operation as first atom', () => {
     let input: MathTree[];
     let expected: MathTree;
     input = [starString, aString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [istarString, aString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [slashString, aString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [caretString, aString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [plusString, aString];
     expected = aString;
     expect(ParseMath.makeTree(input)).toBe(expected);
@@ -370,17 +370,17 @@ test('makeTree operation as last atom', () => {
     const aString = new StringSymbol('a');
     let input: MathTree[];
     input = [aString, plusString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, minusString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, starString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, istarString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, slashString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
     input = [aString, caretString];
-    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperation);
+    expect(() => ParseMath.makeTree(input)).toThrow(InvalidOperationError);
 });
 /* */
 test('makeTree order of operations', () => {
@@ -531,8 +531,8 @@ test('atomize', () => {
 });
 /* */
 test('matchGroup - Empty tree', () => {
-    expect(() => ParseMath.matchGroup('')).toThrow(InvalidOperation);
-    expect(() => ParseMath.matchGroup(' ')).toThrow(InvalidOperation);
+    expect(() => ParseMath.matchGroup('')).toThrow(InvalidOperationError);
+    expect(() => ParseMath.matchGroup(' ')).toThrow(InvalidOperationError);
 });
 /* */
 test('matchGroup - One level group', () => {

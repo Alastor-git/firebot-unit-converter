@@ -1,5 +1,5 @@
 import regexEscape from "regex-escape";
-import { DelimiterError, DepthLimitExceededError, InvalidOperation, UnexpectedError } from "./errors";
+import { DelimiterError, DepthLimitExceededError, InvalidOperationError, UnexpectedError } from "./errors";
 import { MathTree, Empty, StringSymbol, Numeric, Add, Oppose, Multiply, Divide, Power } from './MathTree';
 import { logger } from "./shared/firebot-modules";
 
@@ -10,7 +10,7 @@ export class ParseMath {
         const {groupMath, remainder}: {groupMath: MathTree, remainder: string} = ParseMath.matchGroup(toBeParsed);
         /* istanbul ignore next */
         if (remainder !== '') {
-            throw new UnexpectedError(`Input could not be fully parsed. '${remainder}' was left out`);
+            throw new UnexpectedError(`Input could not be fully parsed. '${remainder}' was left out. `);
         }
         return groupMath;
     }
@@ -32,14 +32,14 @@ export class ParseMath {
                 toBeParsed = '';
             } else if (firstDelimIndex === -1) {
                 // Was looking for a delimiter but didn't find one
-                throw new DelimiterError(`Sequence ended while looking for a ${closingDelim} delimiter.`);
+                throw new DelimiterError(`Sequence ended while looking for a ${closingDelim} delimiter. `);
             } else if (toBeParsed[firstDelimIndex] === closingDelim) {
                 // Found a closing delimiter
                 const preDelim: string = toBeParsed.substring(0, firstDelimIndex);
                 let index: number;
                 if ((index = preDelim.search(`[${regexEscape(closingDelims)}]`)) >= 0) {
                     // Found an illegal closing delimiter
-                    throw new DelimiterError(`Unexpected closing delimiter ${preDelim[index]} encountered.`);
+                    throw new DelimiterError(`Unexpected closing delimiter ${preDelim[index]} encountered. `);
                 }
 
                 // Anything before the delimiter is an atom
@@ -61,7 +61,7 @@ export class ParseMath {
                 let index: number;
                 if ((index = preDelim.search(`[${regexEscape(closingDelims)}]`)) >= 0) {
                     // Found an illegal closing delimiter
-                    throw new DelimiterError(`Unexpected closing delimiter ${preDelim[index]} encountered.`);
+                    throw new DelimiterError(`Unexpected closing delimiter ${preDelim[index]} encountered. `);
                 }
 
                 // Anything before the delimiter is an atom
@@ -82,7 +82,7 @@ export class ParseMath {
                 // Check atoms don't have delimiters left
                 let index: number;
                 if ((index = atom.value.search(`[${regexEscape(`${openingDelims}${closingDelims}`)}]`)) !== -1) {
-                    throw new DelimiterError(`Unexpected delimiter ${atom.value[index]} encountered.`);
+                    throw new DelimiterError(`Unexpected delimiter ${atom.value[index]} encountered. `);
                 }
                 quarks = quarks.concat(ParseMath.atomize(atom.value));
             } else {
@@ -93,7 +93,7 @@ export class ParseMath {
         const groupMath: MathTree = ParseMath.makeTree(quarks);
         // Check we don't end up with an empty math tree
         if (groupMath instanceof Empty) {
-            throw new InvalidOperation(`Empty groups are forbidden. `);
+            throw new InvalidOperationError(`Empty groups are forbidden. `);
         }
         return {groupMath, remainder};
     }
@@ -135,7 +135,7 @@ export class ParseMath {
 
             // Atom can't be an empty MathTree
             if (atom instanceof Empty) {
-                throw new InvalidOperation(`Empty groups are forbidden. `);
+                throw new InvalidOperationError(`Empty groups are forbidden. `);
             }
 
             // Sanitize first atom
@@ -144,21 +144,21 @@ export class ParseMath {
                     // + as first atom gets gobbled
                     continue;
                 } else if (atom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(atom.value)) {
-                    throw new InvalidOperation(`${atom} is invalid as the first operation. `);
+                    throw new InvalidOperationError(`${atom.value} is invalid as the first token. `);
                 }
             }
 
             // Sanitize last atom
             if (nextAtom === undefined) {
                 if (atom instanceof StringSymbol && ['+', '-', '*', 'i*', '/', '^'].includes(atom.value)) {
-                    throw new InvalidOperation(`${atom} is invalid as the last operation. `);
+                    throw new InvalidOperationError(`${atom.value} is invalid as the last token. `);
                 }
             }
 
             // Check we haven't skipped a +
             /* istanbul ignore next */
             if (atom instanceof StringSymbol && lastAtom instanceof StringSymbol && atom.value === '+' && lastAtom.value === '+') {
-                throw new UnexpectedError(`${lastAtom}${atom} should have been removed. `);
+                throw new UnexpectedError(`${lastAtom.value}${atom.value} should have been removed. `);
                 // Cancel the last + if we still have one
                 processedAtoms.pop();
                 lastAtom = processedAtoms.at(-1);
@@ -185,7 +185,7 @@ export class ParseMath {
                 nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)
             ) {
                 // + *, + i*, + /, + ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '-' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // - + ==> -
                 atoms[0] = new StringSymbol('-');
@@ -199,28 +199,28 @@ export class ParseMath {
                 }
             } else if (atom instanceof StringSymbol && atom.value === '-' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
                 // - *, - i*, - /, - ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && ['*', 'i*'].includes(atom.value) && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // * +, i* + ==> *
                 atoms[0] = new StringSymbol('*');
             } else if (atom instanceof StringSymbol && atom.value === '*' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
                 // * *, * i*, * /, * ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === 'i*' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
                 // i* *, i* i*, i* /, i* ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '/' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // / + ==> /
                 atoms[0] = new StringSymbol('/');
             } else if (atom instanceof StringSymbol && atom.value === '/' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
                 // / *, / i*, / /, / ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (atom instanceof StringSymbol && atom.value === '^' && nextAtom instanceof StringSymbol && nextAtom.value === '+') {
                 // ^ + ==> ^
                 atoms[0] = new StringSymbol('^');
             } else if (atom instanceof StringSymbol && atom.value === '^' && nextAtom instanceof StringSymbol && ['*', 'i*', '/', '^'].includes(nextAtom.value)) {
                 // ^ *, ^ i*, ^ /, ^ ^ ==> error
-                throw new InvalidOperation(`${atom}${nextAtom} is an invalid sequence of operations. `);
+                throw new InvalidOperationError(`${atom.value}${nextAtom.value} is an invalid sequence of operations. `);
             } else if (
                 nextAtom !== undefined &&
                 (!(atom instanceof StringSymbol) || !operations.includes(atom.value)) &&
@@ -383,7 +383,7 @@ export class ParseMath {
                 return atoms[0];
             /* istanbul ignore next */
             default:
-                throw new UnexpectedError(`Some unknown error happened while parsing operations. Final state : ${JSON.stringify(atoms)}`);
+                throw new UnexpectedError(`Some unknown error happened while parsing operations. Final state : ${JSON.stringify(atoms)}. `);
         }
     }
 }

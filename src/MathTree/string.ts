@@ -16,6 +16,6 @@ export class StringSymbol extends MathTree {
     }
 
     collapse(): null {
-        throw new ValueError(`String literal ${this.value} is not able to be parsed to a value`);
+        throw new ValueError(`String literal ${this.value} is not able to be parsed to a value. `);
     }
 }

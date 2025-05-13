@@ -29,7 +29,7 @@ export class PrefixedUnit extends AbstractBasedUnit {
 
     set preferredUnitSymbol(unitSymbol: string) {
         if (!this.baseUnit.symbols.includes(unitSymbol)) {
-            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}`);
+            throw new ValueError(`Unit symbol ${unitSymbol} didn't match any existing symbol in the unit's list ${JSON.stringify(this.symbols)}. `);
         }
 
         this._preferredUnitSymbol = unitSymbol ? unitSymbol : null;
@@ -44,7 +44,7 @@ export class PrefixedUnit extends AbstractBasedUnit {
 
     set prefix(prefix: Prefix) {
         if (prefix.base !== this.base) {
-            throw new PrefixError(`Prefix ${prefix.symbol} (base ${prefix.base})does't have the same base as unit ${this.baseUnit.preferredUnitSymbol} (base ${this.base})`);
+            throw new PrefixError(`Prefix ${prefix.symbol} (base ${prefix.base}) does't have the same base as unit ${this.baseUnit.preferredUnitSymbol} (base ${this.base}). `);
         }
 
         this._prefix = prefix;
@@ -57,7 +57,7 @@ export class PrefixedUnit extends AbstractBasedUnit {
 
     get prefix(): Prefix {
         if (!this._prefix) {
-            throw new ValueError(`Unit prefix has not been defined.`);
+            throw new ValueError(`Unit prefix has not been defined. `);
         }
         return this._prefix;
     }

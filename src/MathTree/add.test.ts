@@ -1,6 +1,6 @@
 import "@/mocks/firebot-modules";
 import { UnitParser } from "@/unit-parser";
-import { InvalidOperation, UnitMismatchError, ValueError } from "@/errors";
+import { InvalidOperationError, UnitMismatchError, ValueError } from "@/errors";
 import { Unit } from "@/Unit/unit";
 import { Prefix } from "@/Unit/prefix";
 import { Quantity } from "@/quantity";
@@ -53,19 +53,19 @@ test('collapsePair', () => {
     expect(() => Add.collapsePair(quantityA, emptyTree)).toThrow(ValueError);
     expect(() => Add.collapsePair(5, emptyTree)).toThrow(ValueError);
 
-    expect(() => Add.collapsePair(null, aSymbol)).toThrow(InvalidOperation);
-    expect(() => Add.collapsePair(unitA, aSymbol)).toThrow(InvalidOperation);
-    expect(() => Add.collapsePair(quantityA, aSymbol)).toThrow(InvalidOperation);
-    expect(() => Add.collapsePair(5, aSymbol)).toThrow(InvalidOperation);
+    expect(() => Add.collapsePair(null, aSymbol)).toThrow(InvalidOperationError);
+    expect(() => Add.collapsePair(unitA, aSymbol)).toThrow(InvalidOperationError);
+    expect(() => Add.collapsePair(quantityA, aSymbol)).toThrow(InvalidOperationError);
+    expect(() => Add.collapsePair(5, aSymbol)).toThrow(InvalidOperationError);
 
     expect(Add.collapsePair(null, quant5A)).toMatchObject(quantityA);
-    expect(() => Add.collapsePair(unitA, quant5A)).toThrow(InvalidOperation);
+    expect(() => Add.collapsePair(unitA, quant5A)).toThrow(InvalidOperationError);
     expect(Add.collapsePair(quantityA, quant5A)).toMatchObject(quantityB);
     expect(Add.collapsePair(quantityC, quant5A)).toMatchObject(Quantity.zero(unitA));
     expect(() => Add.collapsePair(5, quant5A)).toThrow(UnitMismatchError);
 
     expect(Add.collapsePair(null, num5)).toBe(5);
-    expect(() => Add.collapsePair(unitA, num5)).toThrow(InvalidOperation);
+    expect(() => Add.collapsePair(unitA, num5)).toThrow(InvalidOperationError);
     expect(() => Add.collapsePair(quantityA, num5)).toThrow(UnitMismatchError);
     expect(Add.collapsePair(quantityD, num5)).toMatchObject(quantityE);
     expect(Add.collapsePair(5, num5)).toBe(10);
@@ -87,8 +87,8 @@ test('collapse', () => {
     expect(new Add().collapse()).toBe(null);
     expect(new Add(num5).collapse()).toBe(5);
     expect(new Add(num5, num5, num10opp).collapse()).toBe(0);
-    expect(() => new Add(num5, num5, aSymbol).collapse()).toThrow(InvalidOperation);
-    expect(() => new Add(aSymbol, aSymbol).collapse()).toThrow(InvalidOperation);
+    expect(() => new Add(num5, num5, aSymbol).collapse()).toThrow(InvalidOperationError);
+    expect(() => new Add(aSymbol, aSymbol).collapse()).toThrow(InvalidOperationError);
     expect(new Add(num5, num5, new Multiply(num10opp, new UnitSymbol(Unit.ONE))).collapse()).toMatchObject(Quantity.zero());
     expect(() => new Add(num5, num5, quant10oppA).collapse()).toThrow(UnitMismatchError);
     expect(new Add(quant5A, quant5A, quant10oppA).collapse()).toMatchObject(Quantity.zero(unitA));

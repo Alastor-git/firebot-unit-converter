@@ -22,7 +22,7 @@ export class Divide extends MathTree {
         const numeratorValue = this.numerator.collapse();
         const denominatorValue = this.denominator.collapse();
         if (numeratorValue === null || denominatorValue === null) {
-            throw new ValueError(`Cannot perform division on empty groups`);
+            throw new ValueError(`Cannot perform division on empty groups. `);
         } else if (typeof numeratorValue === 'number' && typeof denominatorValue === 'number') {
             return numeratorValue / denominatorValue;
         } else if (numeratorValue instanceof Quantity) {

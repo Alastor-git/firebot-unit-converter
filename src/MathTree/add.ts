@@ -1,6 +1,6 @@
 import { MathTree } from "./abstract-mathtree";
 import { Quantity } from "@/quantity";
-import { InvalidOperation, ValueError } from "@/errors";
+import { InvalidOperationError, ValueError } from "@/errors";
 import { AbstractUnit } from "@/Unit/abstract-unit";
 
 export class Add extends MathTree {
@@ -22,9 +22,9 @@ export class Add extends MathTree {
     static collapsePair(totalValue: AbstractUnit | Quantity | number | null, newTerm: MathTree): Quantity | number {
             const newTermValue = newTerm.collapse();
             if (newTermValue === null) {
-                throw new ValueError(`Cannot add an empty group.`);
+                throw new ValueError(`Cannot add an empty group. `);
             } else if (totalValue instanceof AbstractUnit || newTermValue instanceof AbstractUnit) {
-                throw new InvalidOperation(`Addition cannot be performed on a pure unit.`);
+                throw new InvalidOperationError(`Addition cannot be performed on a pure unit. `);
             } else if (totalValue === null) {
                 return newTermValue;
             } else if (totalValue instanceof Quantity) {

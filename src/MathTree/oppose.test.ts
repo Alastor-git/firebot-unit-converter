@@ -1,6 +1,6 @@
 import "@/mocks/firebot-modules";
 import { UnitParser } from "@/unit-parser";
-import { InvalidOperation, ValueError } from "@/errors";
+import { InvalidOperationError, ValueError } from "@/errors";
 import { Unit } from "@/Unit/unit";
 import { Prefix } from "@/Unit/prefix";
 import { Quantity } from "@/quantity";
@@ -49,7 +49,7 @@ test('collapse', () => {
     const quant5A: Multiply = new Multiply(num5, aSymbol);
 
     expect(() => new Oppose(new Multiply()).collapse()).toThrow(ValueError);
-    expect(() => new Oppose(kaSymbol).collapse()).toThrow(InvalidOperation);
+    expect(() => new Oppose(kaSymbol).collapse()).toThrow(InvalidOperationError);
     expect(() => new Oppose(aString).collapse()).toThrow(ValueError);
     expect(new Oppose(num5).collapse()).toBe(-5);
     expect(new Oppose(quant5A).collapse()).toMatchObject(new Quantity(-5, unitA));

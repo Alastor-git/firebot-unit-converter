@@ -78,14 +78,14 @@ export class CompoundUnit extends AbstractUnit {
         }
         // If the unit is already part of the compound, add to the component, otherwise add the unit.
         if (matchingSymbols.length > 1) {
-            throw new UnitError(`Several components match with unit ${component}`);
+            throw new UnitError(`Several components match with unit ${component}. `);
         } else if (matchingSymbols.length === 1) {
             unitSymbol = matchingSymbols[0];
             if (!this.components[unitSymbol].unit.isDeltaEqual(baseUnit)) {
-                throw new UnitError(`Symbols match for ${unitSymbol} but units do not match.`);
+                throw new UnitError(`Symbols match for ${unitSymbol} but units do not match. `);
             }
             if (this.components[unitSymbol].prefixBase !== 1 && prefixBase !== 1 && this.components[unitSymbol].prefixBase !== prefixBase) {
-                throw new PrefixError(`Prefixes for unit ${unitSymbol} don't have the same base.`);
+                throw new PrefixError(`Prefixes for unit ${unitSymbol} don't have the same base. `);
             }
             if (prefixBase !== 1) {
                 this.components[unitSymbol].prefixBase = prefixBase;
@@ -462,7 +462,7 @@ export class CompoundUnit extends AbstractUnit {
             });
             return product;
         }
-        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit.`);
+        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit. `);
     }
 
     divide(other: AbstractUnit): CompoundUnit;
@@ -480,7 +480,7 @@ export class CompoundUnit extends AbstractUnit {
             });
             return ratio;
         }
-        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit.`);
+        throw new UnitError(`Unsupported unit type ${other.constructor.name} for multiplication with CompoundUnit. `);
     }
 
     power(exponent: number): CompoundUnit {

@@ -12,14 +12,14 @@ export class UnitParser {
     static registerUnit(unit: Unit): void {
         unit.symbols.forEach((symbol) => {
             if (symbol in UnitParser.registeredUnits) {
-                logger.warn(`UnitConverter: Unit symbol ${symbol} already in use. Couldn't register unit ${unit.name}.`);
+                logger.warn(`UnitConverter: Unit symbol ${symbol} already in use. Couldn't register unit ${unit.name}. `);
                 return;
             }
-            logger.info(`UnitConverter: Registering unit ${unit.name} under symbol ${symbol}.`);
+            logger.info(`UnitConverter: Registering unit ${unit.name} under symbol ${symbol}. `);
             // Check that unit isn't already parsed as something else
             try {
                 const parsedUnit = UnitParser.parseUnit(symbol);
-                logger.warn(`UnitConverter: ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} and being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
+                logger.warn(`UnitConverter: ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} and being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
             } catch {
                 // symbol isn't conflicting with any of the currently registered combinations
             }
@@ -27,7 +27,7 @@ export class UnitParser {
             for (const prefixSymbol of Object.keys(UnitParser.registeredPrefixes)) {
                 try {
                     const parsedUnit = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
-                    logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
+                    logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
                 } catch {
                     // `${prefixSymbol}${symbol}` isn't conflicting with any of the currently registered combinations
                 }
@@ -42,15 +42,15 @@ export class UnitParser {
 
     static registerPrefix(prefix: Prefix): void {
         if (prefix.symbol in UnitParser.registeredPrefixes) {
-            logger.warn(`UnitConverter: Prefix symbol ${prefix.symbol} already in use. Couldn't register prefix ${prefix.name}.`);
+            logger.warn(`UnitConverter: Prefix symbol ${prefix.symbol} already in use. Couldn't register prefix ${prefix.name}. `);
             return;
         }
-        logger.info(`UnitConverter: Registering prefix ${prefix.name} under symbol ${prefix.symbol}.`);
+        logger.info(`UnitConverter: Registering prefix ${prefix.name} under symbol ${prefix.symbol}. `);
         // Check the prefix works with each registered unit
         for (const unitSymbol of Object.keys(UnitParser.registeredUnits)) {
             try {
                 const parsedUnit = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
-                logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work.`);
+                logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
             } catch {
                 // `${prefix.symbol}${unitSymbol}` isn't conflicting with any of the currently registered combinations
             }

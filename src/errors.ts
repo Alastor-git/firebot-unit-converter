@@ -1,6 +1,9 @@
-class UnitConverterError extends Error {
+export class UnitConverterError extends Error {
+    originalMessage: string = '';
+
     constructor(message: string) {
         super(`Unitconverter: ${message}`);
+        this.originalMessage = message;
 
         this.name = "UnitConverterError";
 
@@ -12,6 +15,7 @@ class UnitConverterError extends Error {
 export class UnitError extends UnitConverterError {
     constructor(message: string) {
         super(`Unit error : ${message}`);
+        this.originalMessage = message;
 
         this.name = "UnitError";
 
@@ -24,6 +28,7 @@ export class UnitError extends UnitConverterError {
 export class PrefixError extends UnitConverterError {
     constructor(message: string) {
         super(`Prefix error : ${message}`);
+        this.originalMessage = message;
 
         this.name = "PrefixError";
 
@@ -36,6 +41,7 @@ export class PrefixError extends UnitConverterError {
 export class UnitMismatchError extends UnitConverterError {
     constructor(message: string) {
         super(`Unit mismatch : ${message}`);
+        this.originalMessage = message;
 
         this.name = "UnitMismatchError";
 
@@ -47,7 +53,8 @@ export class UnitMismatchError extends UnitConverterError {
 
 export class UnitNotFoundError extends UnitConverterError {
     constructor(message: string) {
-        super(`Unit not found in "${message}"`);
+        super(`Unit not found in "${message}". `);
+        this.originalMessage = `Unit not found in "${message}". `;
 
         this.name = "UnitNotFoundError";
 
@@ -60,6 +67,7 @@ export class UnitNotFoundError extends UnitConverterError {
 export class ValueError extends UnitConverterError {
     constructor(message: string) {
         super(`Invalid parameter value. ${message}`);
+        this.originalMessage = message;
 
         this.name = "ValueError";
 
@@ -72,6 +80,7 @@ export class ValueError extends UnitConverterError {
 export class DelimiterError extends UnitConverterError {
     constructor(message: string) {
         super(`Delimiter Error. ${message}`);
+        this.originalMessage = message;
 
         this.name = "DelimiterError";
 
@@ -83,7 +92,8 @@ export class DelimiterError extends UnitConverterError {
 
 export class DepthLimitExceededError extends UnitConverterError {
     constructor() {
-        super(`Depth limit exceeded while parsing`);
+        super(`Depth limit exceeded while parsing. `);
+        this.originalMessage = `Depth limit exceeded while parsing. `;
 
         this.name = "DepthLimitExceededError";
 
@@ -93,14 +103,15 @@ export class DepthLimitExceededError extends UnitConverterError {
 
 }
 
-export class InvalidOperation extends UnitConverterError {
+export class InvalidOperationError extends UnitConverterError {
     constructor(message: string) {
         super(`Math operation invalid Error. ${message}`);
+        this.originalMessage = message;
 
-        this.name = "InvalidOperation";
+        this.name = "InvalidOperationError";
 
         // Set the prototype explicitly.
-        Object.setPrototypeOf(this, InvalidOperation.prototype);
+        Object.setPrototypeOf(this, InvalidOperationError.prototype);
     }
 
 }
@@ -108,6 +119,7 @@ export class InvalidOperation extends UnitConverterError {
 export class UnexpectedError extends UnitConverterError {
     constructor(message: string) {
         super(`Unexpected Error. ${message}`);
+        this.originalMessage = message;
 
         this.name = "UnexpectedError";
 
