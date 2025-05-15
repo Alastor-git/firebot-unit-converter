@@ -26,7 +26,7 @@ export class UnitParser {
             // Check that the unit works with each registered prefix
             for (const prefixSymbol of Object.keys(UnitParser.registeredPrefixes)) {
                 try {
-                    if (UnitParser.registeredPrefixes[prefixSymbol].base === unit.base) {
+                    if (unit.prefixable && UnitParser.registeredPrefixes[prefixSymbol].base === unit.base) {
                         const parsedUnit = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
                         logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
                     }
@@ -51,7 +51,7 @@ export class UnitParser {
         // Check the prefix works with each registered unit
         for (const unitSymbol of Object.keys(UnitParser.registeredUnits)) {
             try {
-                if (prefix.base === UnitParser.registeredUnits[unitSymbol].base) {
+                if (prefix.base === UnitParser.registeredUnits[unitSymbol].base && UnitParser.registeredUnits[unitSymbol].prefixable) {
                     const parsedUnit = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
                     logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
                 }
@@ -73,7 +73,7 @@ export class UnitParser {
         for (let prefixLength = candidate.length - 1; prefixLength >= 0; prefixLength--) {
             const symbol = candidate.substring(prefixLength);
             prefixSymbol = candidate.substring(0, prefixLength);
-            if (symbol in UnitParser.registeredUnits && (prefixLength === 0 || prefixSymbol in UnitParser.registeredPrefixes)) {
+            if (symbol in UnitParser.registeredUnits && (prefixLength === 0 || (prefixSymbol in UnitParser.registeredPrefixes && UnitParser.registeredUnits[symbol].prefixable))) {
                 unitSymbol = symbol;
                 break;
             }

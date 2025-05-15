@@ -31,7 +31,8 @@ const unitm: Unit = new Unit('m', 'meter', { L: 1 });
 const unitg: Unit = new Unit('g', 'gram', { M: 1 }, 10, 1e-3);
 const unitC: Unit = new Unit('°C', 'celsius', { THETA: 1 }, 10, 1, 273.15);
 const unitF: Unit = new Unit('°F', 'fahrenheit', { THETA: 1 }, 10, 5 / 9, 273.15 - 32 * 5 / 9);
-const unitin: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2);
+const unitin: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2, 0, false);
+const unitb: Unit = new Unit('b', 'bit', { D: 1 }, 2);
 
 test('constructor', () => {
     // Test simple unit
@@ -428,6 +429,56 @@ test('addFactor', () => {
     const unittN: CompoundUnit = new CompoundUnit(new PrefixedUnit(prefixh, unitm), 1);
     const prefixMi: Prefix = new Prefix('Mi', 'Mébi', 2, 20);
     expect(() => unittN.addFactor(new PrefixedUnit(prefixMi, unitm), 1)).toThrow(PrefixError);
+
+    // b * kg / g = 1000b: we leave binary units alone
+    const unittO: CompoundUnit = new CompoundUnit(unitkg).addFactor(unitg, -1).addFactor(unitb, 1);
+    expect(unittO).toHaveProperty('dimensions', { L: 0, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 1 });
+    expect(unittO.coeff).toBeCloseTo(1e3);// Due to float errors
+    expect(unittO).toHaveProperty('offset', 0);
+    expect(unittO).toHaveProperty('components',
+        {
+            'g': {
+                unit: unitg,
+                unitExponent: 0,
+                prefixBase: 10,
+                prefixExponent: 3
+            },
+            'b': {
+                unit: unitb,
+                unitExponent: 1,
+                prefixBase: 2,
+                prefixExponent: 0
+            }
+        });
+    expect(unittO).toHaveProperty('name', 'kilogram*bit*gram^-1');
+    expect(unittO).toHaveProperty('symbols', ['kg*b*g^-1']);
+    expect(unittO.preferredUnitSymbol).toBe('kg*b*g^-1');
+    expect(unittO.preferredSymbol).toBe('kg*b*g^-1');
+
+    // in * kg / g = 1000b: we leave non prefixable units alone
+    const unittP: CompoundUnit = new CompoundUnit(unitkg).addFactor(unitg, -1).addFactor(unitin, 1);
+    expect(unittP).toHaveProperty('dimensions', { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
+    expect(unittP.coeff).toBeCloseTo(1e3 * unitin.coeff);// Due to float errors
+    expect(unittP).toHaveProperty('offset', 0);
+    expect(unittP).toHaveProperty('components',
+        {
+            'g': {
+                unit: unitg,
+                unitExponent: 0,
+                prefixBase: 10,
+                prefixExponent: 3
+            },
+            'in': {
+                unit: unitin,
+                unitExponent: 1,
+                prefixBase: 10,
+                prefixExponent: 0
+            }
+        });
+    expect(unittP).toHaveProperty('name', 'kilogram*inch*gram^-1');
+    expect(unittP).toHaveProperty('symbols', ['kg*in*g^-1']);
+    expect(unittP.preferredUnitSymbol).toBe('kg*in*g^-1');
+    expect(unittP.preferredSymbol).toBe('kg*in*g^-1');
 });
 
 test('addComponent', () => {

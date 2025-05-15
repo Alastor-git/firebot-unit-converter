@@ -5,10 +5,12 @@ import { UnitParser } from "./unit-parser";
 import { Prefix } from "./Unit/prefix";
 import { UnitNotFoundError } from "./errors";
 import { AbstractUnit } from "./Unit/abstract-unit";
+import { PrefixedUnit } from "./Unit/prefixed-unit";
 
 const unit_g: Unit = new Unit('g', 'gramme', { M: 1 }, 10, 1, 0); // eslint-disable-line camelcase
 const unit_kg: Unit = new Unit('kg', 'kilogramme', { M: 1 }, 10, 1e3, 0); // eslint-disable-line camelcase
-const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2); // eslint-disable-line camelcase
+const unit_in: Unit = new Unit(['in', "''"], 'inch', { L: 1 }, 10, 2.54e-2, 0); // eslint-disable-line camelcase
+const unit_min: Unit = new Unit('min', 'minute', { T: 1 }, 10, 60); // eslint-disable-line camelcase
 
 const prefix_k: Prefix = new Prefix('k', 'kilo', 10, 3); // eslint-disable-line camelcase
 const prefix_m: Prefix = new Prefix('m', 'mili', 10, -3); // eslint-disable-line camelcase
@@ -86,6 +88,52 @@ test('registerUnit - Creates unit/prefix conflict', () => {
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });
 
+test('registerUnit - Avoided conflict due to non prefixable unit', () => {
+    const expectedMessage: string = `UnitConverter: minute's symbol min is conflicting with unit miliinch and being parsed as min. One of them isn't gonna work. `;
+    jest.clearAllMocks();
+    UnitParser.registerUnit(unit_in);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerPrefix(prefix_m);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerUnit(unit_min);
+    expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
+    UnitParser.unregisterPrefixes();
+    UnitParser.unregisterUnits();
+
+    const nonPrefixableUnit_in = unit_in.copy(); // eslint-disable-line camelcase
+    nonPrefixableUnit_in.prefixable = false; // eslint-disable-line camelcase
+    jest.clearAllMocks();
+    UnitParser.registerUnit(nonPrefixableUnit_in);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerPrefix(prefix_m);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerUnit(unit_min);
+    expect(logger.warn).not.toHaveBeenCalled();
+});
+
+test('registerPrefix - Avoided conflict due to non prefixable unit', () => {
+    const expectedMessage: string = `UnitConverter: Prefix mili's symbol m is creating a conflict between units inch and minute. min is being parsed as min. One of them isn't gonna work. `;
+    jest.clearAllMocks();
+    UnitParser.registerUnit(unit_in);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerUnit(unit_min);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerPrefix(prefix_m);
+    expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
+    UnitParser.unregisterPrefixes();
+    UnitParser.unregisterUnits();
+
+    const nonPrefixableUnit_in = unit_in.copy(); // eslint-disable-line camelcase
+    nonPrefixableUnit_in.prefixable = false; // eslint-disable-line camelcase
+    jest.clearAllMocks();
+    UnitParser.registerUnit(nonPrefixableUnit_in);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerPrefix(prefix_m);
+    expect(logger.warn).not.toHaveBeenCalled();
+    UnitParser.registerUnit(unit_min);
+    expect(logger.warn).not.toHaveBeenCalled();
+});
+
 test('parseUnit - valid parse', () => {
     let expectedUnit: AbstractUnit;
     // Simple unit
@@ -104,6 +152,19 @@ test('parseUnit - invalid parse', () => {
     // prefix not found
     UnitParser.registerUnit(unit_g);
     expect(() => UnitParser.parseUnit('kg')).toThrow(UnitNotFoundError);
+});
+
+test('parseUnit - unprefixable Units', () => {
+    UnitParser.registerPrefix(prefix_m);
+
+    UnitParser.registerUnit(unit_in);
+    expect(UnitParser.parseUnit('min').isEqual(new PrefixedUnit(prefix_m, unit_in))).toBe(true);
+    UnitParser.unregisterUnits();
+
+    const nonPrefixableUnit_in = unit_in.copy(); // eslint-disable-line camelcase
+    nonPrefixableUnit_in.prefixable = false; // eslint-disable-line camelcase
+    UnitParser.registerUnit(nonPrefixableUnit_in);
+    expect(() => UnitParser.parseUnit('min')).toThrow(UnitNotFoundError);
 });
 
 test('findBestPrefixFromExponent', () => {

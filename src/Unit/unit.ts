@@ -4,10 +4,12 @@ import { PrefixedUnit } from "./prefixed-unit";
 import { AbstractUnit, UnitDimensions } from "./abstract-unit";
 import { CompoundUnit } from "./compound-unit";
 import { AbstractBasedUnit } from "./abstract-based-unit";
+import { UnitError } from "@/errors";
 
 export class Unit extends AbstractBasedUnit {
     symbols: string[];
     name: string;
+    prefixable: boolean;
 
     coeff: number;
     offset: number;
@@ -21,7 +23,8 @@ export class Unit extends AbstractBasedUnit {
                 dimensions: Partial<UnitDimensions> = {},
                 base: number = 10,
                 coeff: number = 1,
-                offset: number = 0) {
+                offset: number = 0,
+                prefixable: boolean = true) {
         super();
         this.dimensions = {
             L: dimensions.L ?? 0,
@@ -42,15 +45,16 @@ export class Unit extends AbstractBasedUnit {
         this.preferredUnitSymbol = this.symbols[0];
         this.name = name;
         this.base = base;
+        this.prefixable = prefixable;
     }
 
     copy(): Unit {
-        const copy = new Unit(this.symbols, this.name, { ...this.dimensions }, this.base, this.coeff, this.offset);
+        const copy = new Unit(this.symbols, this.name, { ...this.dimensions }, this.base, this.coeff, this.offset, this.prefixable);
         copy.preferredUnitSymbol = this.preferredUnitSymbol;
         return copy;
     }
 
-    static ONE: Unit = new Unit('', '', {}, 1, 1, 0);
+    static ONE: Unit = new Unit('', '', {}, 1, 1, 0, false);
 
     isNeutralElement(): boolean {
         return this.isDimensionless() && this.isLinear() && this.coeff === 1;
@@ -61,7 +65,7 @@ export class Unit extends AbstractBasedUnit {
             return this;
         }
         // Delta units are identical to the unit, but without an offset
-        return new Unit(this.symbols, this.name, this.dimensions, this.base, this.coeff);
+        return new Unit(this.symbols, this.name, this.dimensions, this.base, this.coeff, 0, this.prefixable);
     }
 
     multiply(other: number): Quantity;
@@ -89,6 +93,9 @@ export class Unit extends AbstractBasedUnit {
     }
 
     applyPrefix(prefix: Prefix, unitSymbol?: string): PrefixedUnit {
+        if (!this.prefixable) {
+            throw new UnitError(`Unit ${this.name} cannot be prefixed`);
+        }
         return new PrefixedUnit(prefix, this, unitSymbol);
     }
 }

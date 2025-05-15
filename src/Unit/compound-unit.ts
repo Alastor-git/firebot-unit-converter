@@ -150,6 +150,7 @@ export class CompoundUnit extends AbstractUnit {
             prefixedComponents = prefixedComponents.concat(this.updatePrefixBase(base));
         });
 
+        // TODO: Separate non prefixable units and bases so we avoid situations like kg*in*g^-1 ?
         return prefixedComponents.sort((componentA, componentB) => { // Sort by ascending exponent
             return componentB.unitExponent - componentA.unitExponent;
         });
@@ -171,8 +172,11 @@ export class CompoundUnit extends AbstractUnit {
         }).sort((componentA, componentB) => { // Sort by ascending exponent
             return componentB.unitExponent - componentA.unitExponent;
         });
+        const nonPrefixableComponents: UnitComponent[] = sortedComponents.filter((component) => {
+            return !component.unit.prefixable;
+        });
         const sortedFilteredComponents: UnitComponent[] = sortedComponents.filter((component) => { // Units with 0 exponent can't have a prefix
-            if (component.unitExponent === 0) {
+            if (component.unitExponent === 0 || !component.unit.prefixable) {
                 remainingFactor *= component.prefixBase ** component.prefixExponent;
                 return false;
             }
@@ -195,7 +199,7 @@ export class CompoundUnit extends AbstractUnit {
         // Round the remainingFactor to avoid precision loss
         remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
-            return sortedFilteredComponents;
+            return sortedFilteredComponents.concat(nonPrefixableComponents);
         }
         // For units without a prefix, see if we can find a lower prefix
         sortedFilteredComponents.forEach((component) => {
@@ -211,7 +215,7 @@ export class CompoundUnit extends AbstractUnit {
         // Round the remainingFactor to avoid precision loss
         remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
-            return sortedFilteredComponents;
+            return sortedFilteredComponents.concat(nonPrefixableComponents);
         }
         // See if we can improve the prefix of a unit, starting from the highest exponent unit
         sortedFilteredComponents.forEach((component) => {
@@ -237,7 +241,7 @@ export class CompoundUnit extends AbstractUnit {
         // Round the remainingFactor to avoid precision loss
         remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
-            return sortedFilteredComponents;
+            return sortedFilteredComponents.concat(nonPrefixableComponents);
         }
         // Recursively try to upgrade a prefix while downgrading another to see if we can get closer
         const componentSolutions: {
@@ -312,7 +316,7 @@ export class CompoundUnit extends AbstractUnit {
         // Round the remainingFactor to avoid precision loss
         remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
-            return sortedFilteredComponents;
+            return sortedFilteredComponents.concat(nonPrefixableComponents);
         }
         // Split a unit with an exponent > 1 into several factors with separate prefixes
         const resortedFilteredComponents = [...sortedFilteredComponents].sort((component1, component2) => {
@@ -355,11 +359,11 @@ export class CompoundUnit extends AbstractUnit {
         // Round the remainingFactor to avoid precision loss
         remainingFactor = Math.round(remainingFactor * 1e6) / 1e6;
         if (remainingFactor === 1) {
-            return sortedFilteredComponents;
+            return sortedFilteredComponents.concat(nonPrefixableComponents);
         }
         // Split a unit with 0 exponent into a ratio of units with prefixes to account for the remaining prefactor
         sortedComponents.forEach((component) => {
-            if (remainingFactor !== 1 && component.unitExponent === 0) {
+            if (remainingFactor !== 1 && component.unitExponent === 0 && component.unit.prefixable) {
                 const newPrefixBase: number = component.unit.base;
                 const remainingExponent: number = Math.log2(remainingFactor) / Math.log2(component.prefixBase);
                 // At the numerator is the closest to the exact exponent approached from larger absolute values
@@ -396,7 +400,7 @@ export class CompoundUnit extends AbstractUnit {
             logger.debug(JSON.stringify(sortedFilteredComponents));
             throw new UnexpectedError(`There was a remaining factor of ${remainingFactor} for this unit. `);
         }
-        return sortedFilteredComponents;
+        return sortedFilteredComponents.concat(nonPrefixableComponents);
     }
 
     updateSymbol(prefixedComponents: UnitComponent[]) {
