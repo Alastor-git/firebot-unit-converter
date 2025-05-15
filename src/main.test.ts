@@ -12,6 +12,7 @@ test("main default export is the custom script", () => {
 });
 
 test("run() calls logger.info with the right messages", async () => {
+    jest.clearAllMocks();
 
     const runRequest = {
         parameters: {},
@@ -22,6 +23,8 @@ test("run() calls logger.info with the right messages", async () => {
 
     expect(logger.info).toHaveBeenCalledWith("Loading Unit Converter...");
     expect(logger.info).toHaveBeenCalledWith("Unit Converter loaded");
+
+    expect(logger.warn).not.toHaveBeenCalled();
 });
 
 test('stop() calls logger.info with the right messages', () => {
