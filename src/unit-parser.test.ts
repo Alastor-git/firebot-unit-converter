@@ -77,8 +77,11 @@ test('registerPrefix - Already parses', () => {
 
 test('registerUnit - Creates unit/prefix conflict', () => {
     const expectedMessage: string = `UnitConverter: unit gramme's symbol g is conflicting with unit kilogramme when using prefix k. kg is being parsed as kg. One of them isn't gonna work. `;
+    jest.clearAllMocks();
     UnitParser.registerUnit(unit_kg);
+    expect(logger.warn).not.toHaveBeenCalled();
     UnitParser.registerPrefix(prefix_k);
+    expect(logger.warn).not.toHaveBeenCalled();
     UnitParser.registerUnit(unit_g);
     expect(logger.warn).toHaveBeenLastCalledWith(expectedMessage);
 });

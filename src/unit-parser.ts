@@ -26,8 +26,10 @@ export class UnitParser {
             // Check that the unit works with each registered prefix
             for (const prefixSymbol of Object.keys(UnitParser.registeredPrefixes)) {
                 try {
-                    const parsedUnit = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
-                    logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
+                    if (UnitParser.registeredPrefixes[prefixSymbol].base === unit.base) {
+                        const parsedUnit = UnitParser.parseUnit(`${prefixSymbol}${symbol}`);
+                        logger.warn(`UnitConverter: unit ${unit.name}'s symbol ${symbol} is conflicting with unit ${parsedUnit.name} when using prefix ${prefixSymbol}. ${prefixSymbol}${symbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
+                    }
                 } catch {
                     // `${prefixSymbol}${symbol}` isn't conflicting with any of the currently registered combinations
                 }
@@ -49,8 +51,10 @@ export class UnitParser {
         // Check the prefix works with each registered unit
         for (const unitSymbol of Object.keys(UnitParser.registeredUnits)) {
             try {
-                const parsedUnit = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
-                logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
+                if (prefix.base === UnitParser.registeredUnits[unitSymbol].base) {
+                    const parsedUnit = UnitParser.parseUnit(`${prefix.symbol}${unitSymbol}`);
+                    logger.warn(`UnitConverter: Prefix ${prefix.name}'s symbol ${prefix.symbol} is creating a conflict between units ${UnitParser.registeredUnits[unitSymbol].name} and ${parsedUnit.name}. ${prefix.symbol}${unitSymbol} is being parsed as ${parsedUnit.preferredSymbol}. One of them isn't gonna work. `);
+                }
             } catch {
                 // `${prefix.symbol}${unitSymbol}` isn't conflicting with any of the currently registered combinations
             }
