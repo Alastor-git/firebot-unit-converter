@@ -68,18 +68,14 @@ export class UnitParser {
 
     static parseUnit(candidate: string): AbstractUnit {
         candidate = candidate.trim();
-        let unitSymbol: string = "";
-        let prefixSymbol: string = "";
-        for (const symbol of Object.keys(UnitParser.registeredUnits)) {
-            if (candidate.endsWith(symbol)) {
-                if (symbol.length === candidate.length) {
-                    unitSymbol = symbol;
-                    prefixSymbol = "";
-                    break;
-                } else if (Object.keys(UnitParser.registeredPrefixes).includes((prefixSymbol = candidate.substring(0, candidate.length - symbol.length)))) {
-                    unitSymbol = symbol;
-                    break;
-                }
+        let unitSymbol: string = '';
+        let prefixSymbol: string = '';
+        for (let prefixLength = candidate.length - 1; prefixLength >= 0; prefixLength--) {
+            const symbol = candidate.substring(prefixLength);
+            prefixSymbol = candidate.substring(0, prefixLength);
+            if (symbol in UnitParser.registeredUnits && (prefixLength === 0 || prefixSymbol in UnitParser.registeredPrefixes)) {
+                unitSymbol = symbol;
+                break;
             }
         }
         if (unitSymbol) {
