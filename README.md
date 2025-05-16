@@ -16,7 +16,7 @@ It can perform all basic calculations involving additions, soustractions, produc
 ## Installation
 
 To install the script: 
-- Download the [latest release of `firebot-convert-unit.js`](). 
+- Download the [latest release of `firebot-convert-unit.js`](https://github.com/Alastor-git/firebot-unit-converter/releases/download/v1.0/firebot-convert-unit.js). 
 - In Firebot, access `File/Open Data Folder` to open your stream profile. 
 - Paste `firebot-convert-unit.js` in the `scripts` folder. 
 - In Firebot's `Settings/Scripts`
