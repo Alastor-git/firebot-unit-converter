@@ -88,7 +88,7 @@ export default tseslint.config(
             camelcase: "warn", // useCamelCasePleaseKThanks
             "comma-dangle": "warn", // No trailing commas
             "comma-spacing": "warn", // Reqire space after commas
-          
+
             "computed-property-spacing": "warn", // No whitespace when using object[thing]
             curly: "warn", // Must wrap blocks with {}
             indent: "off", // Superseded by TS

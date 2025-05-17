@@ -28,10 +28,11 @@ test("run() calls logger.info with the right messages", async () => {
 });
 
 test('stop() calls logger.info with the right messages', () => {
+    jest.clearAllMocks();
     customScript.stop?.();
 
-    expect(logger.info).toHaveBeenCalledWith("Loading Unit Converter...");
-    expect(logger.info).toHaveBeenCalledWith("Unit Converter loaded");
+    expect(logger.info).toHaveBeenCalledWith("Unloading Unit Converter...");
+    expect(logger.info).toHaveBeenCalledWith("Unit Converter unloaded");
 });
 
 test('getdefaultParameters', () => {
