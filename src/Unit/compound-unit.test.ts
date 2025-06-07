@@ -455,7 +455,7 @@ test('addFactor', () => {
     expect(unittO.preferredUnitSymbol).toBe('kg*b*g^-1');
     expect(unittO.preferredSymbol).toBe('kg*b*g^-1');
 
-    // in * kg / g = 1000b: we leave non prefixable units alone
+    // in * kg / g = 1000 in: we leave non prefixable units alone
     const unittP: CompoundUnit = new CompoundUnit(unitkg).addFactor(unitg, -1).addFactor(unitin, 1);
     expect(unittP).toHaveProperty('dimensions', { L: 1, M: 0, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
     expect(unittP.coeff).toBeCloseTo(1e3 * unitin.coeff);// Due to float errors
@@ -479,6 +479,31 @@ test('addFactor', () => {
     expect(unittP).toHaveProperty('symbols', ['kg*in*g^-1']);
     expect(unittP.preferredUnitSymbol).toBe('kg*in*g^-1');
     expect(unittP.preferredSymbol).toBe('kg*in*g^-1');
+
+    // 1 / g = g ^-1: Throw away Unit.ONE for display
+    const unittQ: CompoundUnit = new CompoundUnit(Unit.ONE).addFactor(unitg, -1);
+    expect(unittQ).toHaveProperty('dimensions', { L: 0, M: -1, T: 0, I: 0, THETA: 0, N: 0, J: 0, A: 0, D: 0 });
+    expect(unittQ.coeff).toBeCloseTo(1000);// Due to float errors
+    expect(unittQ).toHaveProperty('offset', 0);
+    expect(unittQ).toHaveProperty('components',
+        {
+            '': {
+                unit: Unit.ONE,
+                unitExponent: 0,
+                prefixBase: 1,
+                prefixExponent: 0
+            },
+            'g': {
+                unit: unitg,
+                unitExponent: -1,
+                prefixBase: 10,
+                prefixExponent: -0
+            }
+        });
+    expect(unittQ).toHaveProperty('name', 'gram^-1');
+    expect(unittQ).toHaveProperty('symbols', ['g^-1']);
+    expect(unittQ.preferredUnitSymbol).toBe('g^-1');
+    expect(unittQ.preferredSymbol).toBe('g^-1');
 });
 
 test('addComponent', () => {

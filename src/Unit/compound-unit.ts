@@ -173,7 +173,7 @@ export class CompoundUnit extends AbstractUnit {
             return componentB.unitExponent - componentA.unitExponent;
         });
         const nonPrefixableComponents: UnitComponent[] = sortedComponents.filter((component) => {
-            return !component.unit.prefixable;
+            return !component.unit.prefixable && component.unitExponent !== 0;
         });
         const sortedFilteredComponents: UnitComponent[] = sortedComponents.filter((component) => { // Units with 0 exponent can't have a prefix
             if (component.unitExponent === 0 || !component.unit.prefixable) {
