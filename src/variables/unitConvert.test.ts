@@ -74,3 +74,28 @@ test('Invalid inputs', () => {
     expect(unitConvertVariable.evaluator({} as Effects.Trigger, '25°C^(6rad)', '°C')).toBe("The exponent of a power must be dimensionless. ");
     expect(unitConvertVariable.evaluator({} as Effects.Trigger, '25°C', '°C+K')).toBe("Addition cannot be performed on a pure unit. ");
 });
+
+test('Rounding', () => {
+    // No arg
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '15.0004 °C', 'K')).toBe('288.15 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '15.0006 °C', 'K')).toBe('288.151 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K')).toBe('33.333 K');
+
+    // Numeric arg
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', -2)).toBe('0 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', -1)).toBe('30 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 0)).toBe('33 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 1)).toBe('33.3 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 2)).toBe('33.33 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 3)).toBe('33.333 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 3.3)).toBe('33.333 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', 3.6)).toBe('33.333 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', -1.5)).toBe('30 K');
+
+    // Text Arg
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', '3.3')).toBe('33.333 K');
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', 'K', '-1.5')).toBe('30 K');
+
+    // Invalid Arg
+    expect(unitConvertVariable.evaluator({} as Effects.Trigger, '100 K/3', '°C', 'John')).toBe('Invalid value "John" for the decimals argument');
+});

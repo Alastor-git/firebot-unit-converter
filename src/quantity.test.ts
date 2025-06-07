@@ -289,4 +289,23 @@ test('toString', () => {
 
     const subject3: Quantity = new Quantity(1e9, new CompoundUnit(new PrefixedUnit(prefix_k, unit_g, 'g'), 2).addFactor(unitK, -1));
     expect(subject3.toString()).toBe('1000000000 kg^2*K^-1');
+
+    // Rounding (no arg)
+    const subject4: Quantity = new Quantity(334.1554, unitK);
+    expect(subject4.toString()).toBe('334.155 K');
+
+    const subject5: Quantity = new Quantity(334.1556, unitK);
+    expect(subject5.toString()).toBe('334.156 K');
+
+    // Rounding (arg)
+    const subject6: Quantity = new Quantity(100 / 3, unitK);
+    expect(subject6.toString(2)).toBe('33.33 K');
+    expect(subject6.toString(1)).toBe('33.3 K');
+    expect(subject6.toString(3)).toBe('33.333 K');
+    expect(subject6.toString(0)).toBe('33 K');
+    expect(subject6.toString(-1)).toBe('30 K');
+    expect(subject6.toString(-2)).toBe('0 K');
+    expect(subject6.toString(3.3)).toBe('33.333 K');
+    expect(subject6.toString(3.6)).toBe('33.333 K');
+    expect(subject6.toString(-1.5)).toBe('30 K');
 });

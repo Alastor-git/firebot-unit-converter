@@ -13,6 +13,9 @@ When converting between thermal units, it recognizes abreviated notations `C` in
 
 It can perform all basic calculations involving additions, soustractions, products, ratio and power. 
 
+By default, the returned values are rounded to 3 decimals. 
+An optionnal argument allows the user to specify the number of decimals. 
+
 ## Installation
 
 To install the script: 
@@ -76,4 +79,14 @@ The following error messages can be obtained as a result of erroneous inputs:
 - `The result of power operation is undefined for value=-25 and power=0.6. `: The results of some fractional powers are ill defined or complex numbers, which are not supported by this script. 
 - `The exponent of a power must be dimensionless. `: The exponent part of a power was not dimensionless (e.g. `5^(3mm)` is undefined).
 - `Addition cannot be performed on a pure unit. `: Units can't be added together (e.g. `cm + mm` is undefined). 
+- `Invalid value "value" for the decimals argument`: The value given for the decimals argument cannot be converted to a valid number. It might be a text or some other invalid value. 
 
+## Rounding
+
+An optionnal argument allows you to specify the number of decimals that the result must be rounded to. 
+- `$unitMath[100K / 3]` would return `33.333 K`.
+- `$unitMath[100K / 3, 6]` would return `33.333333 K`.
+- `$unitConvert[15.006°C, K, 1]` would return `288.2 K` where the actual value would be `288.156 K`.
+
+If the decimals value given is not an integer, it will be truncated to its integer part. 
+If the decimals value is negative, the result will be rounded to the specified power of 10 (i.e. `$unitMath[288K, -2]` would round to the nearest multiple of `100`, resulting in `300 K`). 

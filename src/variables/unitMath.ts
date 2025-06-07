@@ -3,29 +3,41 @@ import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effect
 import { OutputDataType, VariableCategory } from "@shared/variable-constants";
 import { ParseMath } from "@/math-parser";
 import { logger } from "@/shared/firebot-modules";
-import { UnitConverterError } from "@/errors";
+import { UnitConverterError, ValueError } from "@/errors";
 
 export const unitMathVariable: ReplaceVariable = {
     definition: {
         handle: "unitMath",
-        usage: "unitMath[expression]",
-        description: "Reduces a mathematical expression that containins units to its simplest form.",
+        usage: "unitMath[expression, decimals?]",
+        description: "Reduces a mathematical expression that containins units to its simplest form. Rounds to 3 decimals by default. ",
         examples: [
-            {
-                usage: "unitMath[2mm + 2m]",
-                description: `Returns 2.002 m`
-            },
             {
                 usage: "unitMath[5kg / (3L + 20dL)]",
                 description: `Returns 1 kg*L^-1`
+            },
+            {
+                usage: "unitMath[2mm + 2m]",
+                description: `Returns 2.002 m. `
+            },
+            {
+                usage: "unitMath[2mm + 2m, 2]",
+                description: `Returns 2 m, which is 2.002 m rounded to 2 decimals. `
+            },
+            {
+                usage: "unitMath[100K/3, 1]",
+                description: `Returns 33.3 K, rounding the value to 1 decimal. `
             }
         ],
         categories: [VariableCategory.COMMON, VariableCategory.NUMBERS],
         possibleDataOutput: [OutputDataType.TEXT]
     },
-    evaluator: function (trigger: Effects.Trigger, subject: string): string {
+    evaluator: function (trigger: Effects.Trigger, subject: string, decimals: number = 3): string {
         try {
-            return ParseMath.match(subject).parseUnits().collapse()?.toString() ?? '';
+            const parsedDecimals = Number(decimals);
+            if (isNaN(parsedDecimals)) {
+                throw new ValueError(`Invalid value "${decimals}" for the decimals argument`);
+            }
+            return ParseMath.match(subject).parseUnits().collapse()?.toString(parsedDecimals) ?? '';
         } catch (err) {
             if (err instanceof UnitConverterError) {
                 logger.debug(err.message);

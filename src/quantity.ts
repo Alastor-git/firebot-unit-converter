@@ -110,7 +110,8 @@ export class Quantity {
         return new Quantity(this.value, this.unit.deltaUnit());
     }
 
-    toString(): string {
-        return `${this.value} ${this.unit.preferredSymbol}`;
+    toString(decimals: number = 3): string {
+        decimals = Math.trunc(decimals);
+        return `${Math.round(10 ** decimals * this.value) / 10 ** decimals} ${this.unit.preferredSymbol}`;
     }
 }
