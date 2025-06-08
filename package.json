@@ -1,7 +1,7 @@
 {
     "name": "firebot-convert-unit",
     "scriptOutputName": "firebot-convert-unit",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "A Firebot plugin to convert from one unit to another.",
     "main": "",
     "scripts": {

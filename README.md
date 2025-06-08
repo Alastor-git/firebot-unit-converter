@@ -19,7 +19,7 @@ An optionnal argument allows the user to specify the number of decimals.
 ## Installation
 
 To install the script: 
-- Download the [latest release of `firebot-convert-unit.js`](https://github.com/Alastor-git/firebot-unit-converter/releases/download/v1.0.0/firebot-convert-unit.js). 
+- Download the [latest release of `firebot-convert-unit.js`](https://github.com/Alastor-git/firebot-unit-converter/releases/download/v1.1.0/firebot-convert-unit.js). 
 - In Firebot, access `File/Open Data Folder` to open your stream profile. 
 - Paste `firebot-convert-unit.js` in the `scripts` folder. 
 - In Firebot's `Settings/Scripts`
@@ -88,5 +88,6 @@ An optionnal argument allows you to specify the number of decimals that the resu
 - `$unitMath[100K / 3, 6]` would return `33.333333 K`.
 - `$unitConvert[15.006°C, K, 1]` would return `288.2 K` where the actual value would be `288.156 K`.
 
+By default, the values are rounded to 3 decimals. 
 If the decimals value given is not an integer, it will be truncated to its integer part. 
 If the decimals value is negative, the result will be rounded to the specified power of 10 (i.e. `$unitMath[288K, -2]` would round to the nearest multiple of `100`, resulting in `300 K`). 
