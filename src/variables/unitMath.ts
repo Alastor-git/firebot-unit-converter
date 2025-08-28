@@ -4,6 +4,8 @@ import { OutputDataType, VariableCategory } from "@shared/variable-constants";
 import { ParseMath } from "@/math-parser";
 import { logger } from "@/shared/firebot-modules";
 import { UnitConverterError, ValueError } from "@/errors";
+import { AbstractUnit } from "@/Unit/abstract-unit";
+import { Quantity } from "@/quantity";
 
 export const unitMathVariable: ReplaceVariable = {
     definition: {
@@ -33,11 +35,17 @@ export const unitMathVariable: ReplaceVariable = {
     },
     evaluator: function (trigger: Effects.Trigger, subject: string, decimals: number = 3): string {
         try {
-            const parsedDecimals = Number(decimals);
+            const parsedDecimals = Math.trunc(Number(decimals));
             if (isNaN(parsedDecimals)) {
                 throw new ValueError(`Invalid value "${decimals}" for the decimals argument`);
             }
-            return ParseMath.match(subject).parseUnits().collapse()?.toString(parsedDecimals) ?? '';
+            const result: number | AbstractUnit | Quantity | null = ParseMath.match(subject).parseUnits().collapse();
+            if (result === null) {
+                return '';
+            } else if (typeof result === 'number') {
+                return (Math.round(result * 10 ** parsedDecimals) / 10 ** parsedDecimals).toString();
+            }
+            return result.toString(parsedDecimals);
         } catch (err) {
             if (err instanceof UnitConverterError) {
                 logger.debug(err.message);

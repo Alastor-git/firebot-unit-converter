@@ -60,3 +60,8 @@ test('Rounding', () => {
     // Invalid Arg
     expect(unitMathVariable.evaluator({} as Effects.Trigger, '100 K/3', 'John')).toBe('Invalid value "John" for the decimals argument');
 });
+
+test('Proper rounding on numeric results', () => {
+    expect(unitMathVariable.evaluator({} as Effects.Trigger, '224*80/100')).toBe('179.2');
+    expect(unitMathVariable.evaluator({} as Effects.Trigger, '224*80/100', 0)).toBe('179');
+});

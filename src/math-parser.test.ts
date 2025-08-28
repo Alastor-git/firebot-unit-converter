@@ -752,6 +752,7 @@ test('match', () => {
     UnitParser.registerPrefix(prefix_k);
 
     expect(ParseMath.match('2 + 3 * 5e3 / (6 + 8)^(2+1) - 5').collapse()).toBe(2 + 3 * 5e3 / (6 + 8) ** (2 + 1) - 5);
+    expect(ParseMath.match('224*80/100').collapse()).toBeCloseTo(224 * 80 / 100);
     const expected = new Quantity(
         (2e3 + 3 * 5 * 2.54e-2 - 5e-2) / (6 + 8e-3) ** (2 + 1) / 1e3,
         unit_m.applyPrefix(prefix_k).divide(unit_g.power(3)) // eslint-disable-line camelcase
